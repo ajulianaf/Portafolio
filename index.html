@@ -109,7 +109,7 @@
     <h2>STComunicaciones</h2>
     <p>Creación e implementación de la plataforma web corporativa desde cero, estructurando un catálogo claro y accesible.</p>
     <ul class="tags"><li>Arquitectura de la Información</li><li>Investigación UX</li><li>Diseño UI</li></ul>
-    <button class="btn primary" data-project="STC">Ver caso completo</button>
+    <button class="btn primary" data-case="STC">Ver proceso UX/UI</button>
   </section>
 
   <!-- ===== ESTACIÓN 2 (id = panel-ThreeStar) ===== -->
@@ -119,7 +119,7 @@
     <h2>Three Star</h2>
     <p>Proceso completo de diseño UI/UX en Figma, desde la conceptualización en wireframes de baja fidelidad hasta el prototipo interactivo de alta fidelidad.</p>
     <ul class="tags"><li>Wireframing Lo-Fi</li><li>Prototipado Hi-Fi</li><li>Figma</li></ul>
-    <button class="btn primary" data-project="ThreeStar">Ver caso completo</button>
+    <button class="btn primary" data-case="ThreeStar">Ver proceso UX/UI</button>
   </section>
 
   <!-- ===== ESTACIÓN 3: MI PERFIL + CONTÁCTAME (id = panel-perfil) ===== -->
@@ -193,6 +193,51 @@
   <div id="joy-vert" aria-hidden="true">
     <button id="joy-up" aria-label="Subir">▲</button>
     <button id="joy-down" aria-label="Bajar">▼</button>
+  </div>
+
+  <!-- ===== MODAL DE CASO DE ESTUDIO (lo controla js/case-modal.js) ===== -->
+  <div id="case-modal" role="dialog" aria-modal="true" aria-labelledby="case-title" aria-hidden="true">
+    <div class="case-backdrop"></div>
+    <div class="case-panel">
+      <header class="case-head">
+        <div>
+          <p class="eyebrow" id="case-eyebrow"></p>
+          <h2 id="case-title"></h2>
+        </div>
+        <div class="case-tabs" id="case-tabs" role="tablist">
+          <button role="tab" data-tab="proc" aria-selected="true">Proceso UX/UI</button>
+          <button role="tab" data-tab="demo" aria-selected="false" tabindex="-1">Demo 3D</button>
+        </div>
+        <button class="close-card-btn" id="case-close" aria-label="Cerrar">✕</button>
+      </header>
+
+      <div class="case-body" id="case-body">
+        <div id="case-proc"></div>
+
+        <div id="case-demo" hidden>
+          <div id="demo-stage">
+            <div id="demo-gl"></div>
+            <div id="demo-loading" role="status" aria-live="polite">
+              <span class="demo-spinner" aria-hidden="true"></span>
+              <span>Cargando prototipo…</span>
+            </div>
+          </div>
+          <div class="demo-bar">
+            <div class="demo-devices">
+              <button data-device="desktop" class="on">Escritorio</button>
+              <button data-device="tablet">Tablet</button>
+              <button data-device="mobile">Móvil</button>
+            </div>
+            <div class="demo-note">
+              <b id="demo-note-title"></b>
+              <span id="demo-note-text"></span>
+              <small id="demo-note-size"></small>
+            </div>
+            <a id="demo-open" class="btn" href="#" target="_blank" rel="noopener">Abrir ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="js/main.js"></script>

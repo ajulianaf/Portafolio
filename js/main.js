@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 import { gsap } from 'gsap';
 import { createScenery } from './scenery.js';   // [SCENERY]
+import { createCaseModal } from './case-modal.js';   // [CASE] modal de caso de estudio
 
 /* =========================================================
    0 · CONFIGURACIÓN
@@ -488,6 +489,7 @@ addEventListener('keydown', (e) => {
     console.log(`new THREE.Vector3(${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)})`);
     return;
   }
+  if (document.body.classList.contains('case-open')) return;              // [CASE] con el modal abierto, WASD no mueve la mariposa
   if (screenMode) { if (e.code === 'Escape') closeFocused(); return; }   // con la pantalla abierta, WASD no mueve la mariposa
   const isMove = MOVE_KEYS.includes(e.code);
   if (!isMove && !EXTRA_KEYS.includes(e.code)) return;
@@ -688,7 +690,7 @@ document.querySelectorAll('.project-card .close-card-btn').forEach((btn) =>
 // Clic o tap fuera (pointerdown: no se dispara al soltar un slider fuera de la tarjeta)
 document.addEventListener('pointerdown', (e) => {
   if (!e.target.closest('#settings-panel, #settings-btn')) toggleSettings(false);   // cierra Configuración al pulsar fuera
-  if (e.target.closest('.project-card, .screen-stage, #vp-bar, #menu-btn, #menu, .tag3d, #settings-btn, #settings-panel, #joystick, #joy-vert')) return;   // [JOY] el joystick no cierra tarjetas
+  if (e.target.closest('.project-card, .screen-stage, #vp-bar, #menu-btn, #menu, .tag3d, #settings-btn, #settings-panel, #joystick, #joy-vert, #case-modal')) return;   // [JOY] el joystick no cierra tarjetas · [CASE] el modal tampoco
   if (screenMode) { closeFocused(); return; }                   // clic fuera con la pantalla abierta → la cierra
   if (!activeId) return;
   dismissCard();
@@ -716,6 +718,7 @@ function toggleMenu(force) {
 menuBtn.addEventListener('click', () => toggleMenu());
 
 function showHero() {
+  caseModal.close();                         // [CASE] cierra el modal si estaba abierto
   closeFocused(true);                        // cierra la pantalla 3D sin animar
   resetJoystick();                           // [JOY]
   nearestRaw = null;
@@ -1150,6 +1153,31 @@ document.addEventListener('click', (e) => {
   e.preventDefault();
   openScreen(b.dataset.project);
   b.blur();
+});
+
+/* =========================================================
+   8d · [CASE] MODAL DE CASO DE ESTUDIO (js/case-modal.js + js/cases.js)
+        Se abre con los botones data-case="STC" / data-case="ThreeStar"
+   ========================================================= */
+const caseModal = createCaseModal({
+  onOpen: () => {
+    document.body.classList.add('case-open');
+    if (screenMode) closeFocused(true);                         // cierra la pantalla 3D si estaba abierta
+    resetJoystick();
+    Object.keys(keys).forEach((k) => (keys[k] = false));
+    velocity.set(0, 0, 0);
+    toggleMenu(false);
+    toggleSettings(false);
+    dismissCard();
+  },
+  onClose: () => document.body.classList.remove('case-open'),
+});
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-case]');
+  if (!b) return;
+  e.preventDefault();
+  caseModal.open(b.dataset.case, b);
 });
 
 /* =========================================================
