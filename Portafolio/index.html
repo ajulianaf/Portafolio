@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Angy Juliana Farasica Eljaiek | Ingeniera en Multimedia</title>
+  <link rel="stylesheet" href="css/style.css" />
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+      "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/+esm"
+    }
+  }
+  </script>
+</head>
+
+<body>
+  <!-- Canvas 3D de fondo (lo inyecta main.js) -->
+  <div id="scene"></div>
+  <div id="loader">Cargando modelo 3D…</div>
+
+  <!-- ===== PANTALLA DE INICIO (FULL SCREEN) ===== -->
+  <header id="hero">
+    <p class="eyebrow">Portafolio 2026</p>
+    <h1>Ingeniera en Multimedia</h1>
+    <h2><span class="typing" id="typing-name">Angy Juliana Farasica Eljaiek</span></h2>
+    <div class="hint">
+      <div class="keys-row">
+        <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <span>o</span> <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd>
+      </div>
+      <span class="hint-desktop">Presiona WASD o las Flechas para comenzar a explorar</span>
+      <span class="hint-touch">Mueve el joystick para comenzar a explorar</span>   <!-- [JOY] -->
+    </div>
+  </header>
+
+  <!-- ===== BOTÓN DE CONFIGURACIÓN (⚙) + PANEL ===== -->
+  <button id="settings-btn" aria-label="Configuración" aria-expanded="false" aria-controls="settings-panel">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+    </svg>
+  </button>
+
+  <aside id="settings-panel" aria-hidden="true" aria-label="Configuración">
+    <button class="close-card-btn" id="settings-close" aria-label="Cerrar configuración">✕</button>
+    <p class="eyebrow">Ajustes</p>
+    <h2>Configuración</h2>
+
+    <label class="row switch">
+      <span>Modo claro / oscuro</span>
+      <input type="checkbox" id="theme-toggle" />
+      <i></i>
+    </label>
+
+    <label class="row col">
+      <span>Velocidad de vuelo: <b id="speed-value">8</b></span>
+      <input type="range" id="speed-range" min="3" max="20" value="8" />
+    </label>
+
+    <label class="row col">
+      <span>Distancia de cámara: <b id="cam-value">100%</b></span>
+      <input type="range" id="cam-range" min="70" max="160" value="100" />
+    </label>
+
+    <div class="row col">
+      <span>Color de Interfaz</span>
+      <div class="swatches" id="swatches">
+        <button class="swatch on" data-a="" style="--a:#ff7ac6" aria-label="Rosa (por defecto)"></button>
+        <button class="swatch" data-a="#00e5ff" style="--a:#00e5ff" aria-label="Cian"></button>
+        <button class="swatch" data-a="#ffb347" style="--a:#ffb347" aria-label="Ámbar"></button>
+        <button class="swatch" data-a="#3ddc97" style="--a:#3ddc97" aria-label="Menta"></button>
+      </div>
+    </div>
+
+    <div class="row col">
+      <span>Ambiente</span>
+      <div class="seg" id="fx-seg">
+        <button data-fx="1" class="on">Completo</button>
+        <button data-fx="0.4">Suave</button>
+        <button data-fx="0">Mínimo</button>
+      </div>
+    </div>
+
+    <label class="row switch">
+      <span>Etiquetas sobre las flores</span>
+      <input type="checkbox" id="labels-toggle" checked />
+      <i></i>
+    </label>
+  </aside>
+
+  <!-- ===== BOTÓN DE MENÚ ===== -->
+  <button id="menu-btn" aria-label="Abrir menú" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <nav id="menu" aria-hidden="true">
+    <button data-goto="inicio">Inicio</button>
+    <button data-goto="perfil">Mi perfil</button>
+    <button data-goto="STC">STComunicaciones</button>
+    <button data-goto="ThreeStar">Three Star</button>
+    <button data-goto="servicios">Servicios</button>
+  </nav>
+
+  <!-- ===== ESTACIÓN 1 (id = panel-STC) ===== -->
+  <section class="project-card" id="panel-STC">
+    <button class="close-card-btn" aria-label="Cerrar tarjeta">✕</button>
+    <p class="eyebrow">Caso de estudio 01 · UX/UI</p>
+    <h2>STComunicaciones</h2>
+    <p>Creación e implementación de la plataforma web corporativa desde cero, estructurando un catálogo claro y accesible.</p>
+    <ul class="tags"><li>Arquitectura de la Información</li><li>Investigación UX</li><li>Diseño UI</li></ul>
+    <button class="btn primary" data-project="STC">Ver caso completo</button>
+  </section>
+
+  <!-- ===== ESTACIÓN 2 (id = panel-ThreeStar) ===== -->
+  <section class="project-card" id="panel-ThreeStar">
+    <button class="close-card-btn" aria-label="Cerrar tarjeta">✕</button>
+    <p class="eyebrow">Caso de estudio 02 · UX/UI</p>
+    <h2>Three Star</h2>
+    <p>Proceso completo de diseño UI/UX en Figma, desde la conceptualización en wireframes de baja fidelidad hasta el prototipo interactivo de alta fidelidad.</p>
+    <ul class="tags"><li>Wireframing Lo-Fi</li><li>Prototipado Hi-Fi</li><li>Figma</li></ul>
+    <button class="btn primary" data-project="ThreeStar">Ver caso completo</button>
+  </section>
+
+  <!-- ===== ESTACIÓN 3: MI PERFIL + CONTÁCTAME (id = panel-perfil) ===== -->
+  <section class="project-card profile" id="panel-perfil">
+    <button class="close-card-btn" aria-label="Cerrar tarjeta">✕</button>
+    <p class="eyebrow">Mi perfil</p>
+
+    <div class="profile-head">
+      <!-- Foto: coloca tu imagen en assets/perfil.jpg. Si no existe, se muestran tus iniciales -->
+      <div class="avatar">
+        <span>AJ</span>
+        <img src="assets/perfil.jpg" alt="Angy Juliana Farasica Eljaiek" onerror="this.remove()" />
+      </div>
+      <div>
+        <h2>Angy Juliana Farasica Eljaiek</h2>
+        <p class="role">Ingeniera en Multimedia · UX/UI</p>
+      </div>
+    </div>
+
+    <p>Estudiante de Ingeniería en Multimedia con interés en UX/UI, diseño digital y desarrollo de experiencias interactivas. Combino creatividad, pensamiento centrado en el usuario y habilidades de desarrollo para transformar necesidades en soluciones funcionales, intuitivas y atractivas.</p>
+    <ul class="tags"><li>UX/UI</li><li>Figma</li><li>Three.js</li><li>Diseño interactivo</li></ul>
+
+    <div class="contact">
+      <p class="eyebrow">¿Trabajamos juntos?</p>
+      <h3>Contáctame</h3>
+      <div class="contact-row">
+        <div class="links">
+          <a href="https://www.linkedin.com/in/angy-juliana-farasica-eljaiek-261697441/?isSelfProfile=true" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://www.behance.net/angyjufarasic" target="_blank" rel="noopener">Behance</a>
+          <a href="https://github.com/ajulianaf" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <a class="btn primary"
+           href="https://mail.google.com/mail/?view=cm&fs=1&to=angy.farasica9a@gmail.com&su=Contacto%20desde%20Portafolio&body=Hola%20Angy%2C%20vi%20tu%20portafolio%20y%20me%20gustar%C3%ADa%20contactarte."
+           target="_blank" rel="noopener">Escríbeme</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ESTACIÓN 4: SERVICIOS (id = panel-servicios) · flor derecha ===== -->
+  <section class="project-card services" id="panel-servicios">
+    <button class="close-card-btn" aria-label="Cerrar tarjeta">✕</button>
+    <p class="eyebrow">Servicios</p>
+    <h2>¿En qué puedo ayudarte?</h2>
+    <ul class="service-list">
+      <li><b>Diseño UX/UI</b><span>Investigación, wireframes y prototipos interactivos en Figma.</span></li>
+      <li><b>Desarrollo web interactivo</b><span>Sitios a medida con animación y experiencias 3D.</span></li>
+      <li><b>Arquitectura de información & UX</b><span>Mapeo de flujos, wireframes y estructura funcional de productos.</span></li>
+      <li><b>Diseño de Interacción & Animaciones</b><span>Prototipos dinámicos y transiciones detalladas en Figma.</span></li>
+    </ul>
+    <a class="btn primary"
+       href="https://mail.google.com/mail/?view=cm&fs=1&to=angy.farasica9a@gmail.com&su=Solicitud%20de%20cotizaci%C3%B3n&body=Hola%20Angy%2C%20me%20gustar%C3%ADa%20solicitar%20una%20cotizaci%C3%B3n%20para%3A%20"
+       target="_blank" rel="noopener">Solicitar una cotización</a>
+  </section>
+
+  <!-- Controles de la pantalla 3D [BAR] -->
+  <div id="vp-bar" role="toolbar" aria-label="Controles de la pantalla" aria-hidden="true">
+    <div class="fid" id="fid-seg" hidden>                            <!-- [FID] solo aparece en Three Star -->
+      <button data-fid="lofi">Baja fidelidad</button>
+      <button data-fid="hifi" class="on">Prototipo</button>
+    </div>
+    <span class="sep" aria-hidden="true"></span>
+    <small id="vp-size">1280 × 720</small>
+    <a id="vp-open" href="#" target="_blank" rel="noopener" title="Abrir en una pestaña nueva">↗</a>
+    <button id="vp-close" aria-label="Cerrar pantalla">✕</button>
+  </div>
+
+  <!-- ===== JOYSTICK TÁCTIL [JOY] (solo se muestra en pantallas táctiles) ===== -->
+  <div id="joystick" aria-label="Joystick de vuelo" aria-hidden="true">
+    <div class="joy-base"><div class="joy-knob"></div></div>
+  </div>
+  <div id="joy-vert" aria-hidden="true">
+    <button id="joy-up" aria-label="Subir">▲</button>
+    <button id="joy-down" aria-label="Bajar">▼</button>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+:root {
+  --bg: #0b1020; --fg: #f2f4ff; --muted: #a8b0d0;
+  --accent: #ff7ac6; --accent-2: #7aa8ff;
+  --glass: rgba(20, 26, 50, .6); --border: rgba(255, 255, 255, .14);
+}
+[data-theme="light"] {
+  --bg: #eaf1ff; --fg: #141a33; --muted: #4b5578;
+  --accent: #d6358f; --accent-2: #2f6bff;
+  --glass: rgba(255, 255, 255, .7); --border: rgba(0, 0, 0, .12);
+}
+
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg); color: var(--fg);
+  transition: background .4s, color .4s;
+}
+
+/* Canvas 3D de fondo */
+#scene { position: fixed; inset: 0; z-index: 0; }
+#scene canvas { display: block; }
+
+/* ===== Hero a pantalla completa ===== */
+#hero {
+  position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh; height: 100dvh;
+  z-index: 20;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 24px;
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--accent) 22%, var(--bg)) 0%, var(--bg) 70%);
+  opacity: 1;
+  transition: opacity 1.2s ease, visibility 0s linear 0s;
+}
+#hero.hidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 1.2s ease, visibility 0s linear 1.2s;
+}
+.eyebrow {
+  text-transform: uppercase; letter-spacing: .2em; font-size: .75rem;
+  font-weight: 700; color: var(--accent);
+}
+#hero h1 { font-size: clamp(2.4rem, 8vw, 5.5rem); line-height: 1.05; margin: 14px 0 10px; }
+
+/* Nombre en cursiva */
+#hero h2 {
+  font-size: clamp(1.1rem, 3.4vw, 1.9rem);
+  font-weight: 500;
+  font-family: "Georgia", "Palatino Linotype", "Times New Roman", serif;
+  font-style: italic;
+  letter-spacing: .02em;
+  max-width: 100%;
+}
+
+/* Efecto máquina de escribir */
+.typing {
+  --chars: 29;                      /* nº de caracteres de "Angy Juliana Farasica Eljaiek" */
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  vertical-align: bottom;
+  width: 0;
+  padding-right: 4px;               /* evita recortar la cursiva y deja sitio al cursor */
+  border-right: 2px solid var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation:
+    typing 3.2s steps(var(--chars), end) .6s forwards,
+    caret .75s step-end infinite;
+}
+@keyframes typing { to { width: calc(var(--chars) * 1ch + 4px); } }
+@keyframes caret  { 50% { border-right-color: transparent; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .typing { animation: none; width: auto; border-right-color: transparent; }
+}
+
+.hint {
+  margin-top: 48px; color: var(--muted); display: grid; gap: 14px; justify-items: center;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+.keys-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
+@keyframes pulse { 50% { opacity: .55; transform: translateY(-4px); } }
+kbd {
+  display: inline-block; min-width: 30px; padding: 4px 9px;
+  border: 1px solid var(--border); border-bottom-width: 3px; border-radius: 8px;
+  background: rgba(255, 255, 255, .08); color: var(--fg);
+  font: 600 .85rem monospace; text-align: center;
+}
+
+/* [JOY] Texto del hero según el dispositivo */
+.hint-touch { display: none; }
+
+/* Loader discreto */
+#loader {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 50;
+  padding: 8px 16px; border-radius: 99px; border: 1px solid var(--border);
+  background: var(--glass); backdrop-filter: blur(10px);
+  font-size: .8rem; color: var(--muted); transition: opacity .6s;
+}
+#loader.hide { opacity: 0; pointer-events: none; }
+
+/* ---------- MENÚ (visible incluso sobre el hero) ---------- */
+#menu-btn {
+  position: fixed; top: 20px; right: 20px; z-index: 40;
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--glass); backdrop-filter: blur(12px);
+  cursor: pointer; display: grid; place-content: center; gap: 5px;
+}
+#menu-btn span { display: block; width: 22px; height: 2px; background: var(--fg); transition: transform .3s, opacity .3s; }
+#menu-btn[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+#menu-btn[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+#menu-btn[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+#menu {
+  position: fixed; top: 82px; right: 20px; z-index: 40;
+  display: flex; flex-direction: column; gap: 4px; padding: 10px; min-width: 210px;
+  border-radius: 16px; border: 1px solid var(--border);
+  background: var(--glass); backdrop-filter: blur(14px);
+  opacity: 0; transform: translateY(-10px) scale(.97); pointer-events: none;
+  transition: opacity .25s, transform .25s;
+}
+#menu.open { opacity: 1; transform: none; pointer-events: auto; }
+#menu button {
+  background: none; border: 0; color: var(--fg); text-align: left;
+  padding: 10px 14px; border-radius: 10px; font-size: 1rem; cursor: pointer;
+}
+#menu button:hover, #menu button:focus-visible { background: var(--accent); color: #fff; outline: none; }
+
+/* ---------- BOTÓN DE CONFIGURACIÓN (⚙) + PANEL ---------- */
+#settings-btn {
+  position: fixed; bottom: 20px; right: 20px; z-index: 40;
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--glass); backdrop-filter: blur(12px);
+  color: var(--fg); cursor: pointer; display: grid; place-items: center;
+  transition: border-color .25s, box-shadow .25s;
+}
+#settings-btn svg { transition: transform .5s ease; }
+#settings-btn:hover, #settings-btn:focus-visible, #settings-btn[aria-expanded="true"] {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 6px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+#settings-btn[aria-expanded="true"] svg { transform: rotate(90deg); }
+
+#settings-panel {
+  position: fixed; bottom: 82px; right: 20px; z-index: 40;
+  width: min(360px, calc(100vw - 32px)); max-height: calc(100vh - 108px); max-height: calc(100dvh - 108px);
+  overflow-y: auto; padding: 24px;
+  border-radius: 20px; border: 1px solid var(--border);
+  background: var(--glass); backdrop-filter: blur(16px);
+  opacity: 0; transform: translateY(10px) scale(.97); pointer-events: none;
+  transition: opacity .25s, transform .25s;
+}
+#settings-panel.open { opacity: 1; transform: none; pointer-events: auto; }
+#settings-panel h2 { font-size: 1.4rem; margin: 4px 0 6px; padding-right: 40px; }
+#settings-panel .row { margin-top: 14px; }
+#settings-panel .row.col > span { font-size: .9rem; }
+
+/* ---------- TARJETAS DE PROYECTO (por proximidad) ---------- */
+.project-card {
+  position: fixed; z-index: 10;
+  left: clamp(16px, 4vw, 56px); bottom: clamp(16px, 6vh, 56px);
+  width: min(440px, calc(100vw - 32px)); padding: 28px;
+  border-radius: 24px; border: 1px solid var(--border);
+  background: var(--glass); backdrop-filter: blur(16px);
+  opacity: 0; transform: translateY(24px) scale(.97); pointer-events: none;
+  transition: opacity .45s ease, transform .45s ease;
+}
+.project-card.active { opacity: 1; transform: none; pointer-events: auto; }
+.project-card h2 { font-size: 1.8rem; margin: 4px 0 10px; padding-right: 40px; }
+.project-card p { color: var(--muted); line-height: 1.55; }
+.project-card .eyebrow { color: var(--accent); }
+
+/* ---------- BOTÓN DE CIERRE (X) ---------- */
+.close-card-btn {
+  position: absolute; top: 14px; right: 14px;
+  width: 34px; height: 34px; padding: 0;
+  display: grid; place-items: center;
+  border-radius: 50%; cursor: pointer;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, .06);
+  color: var(--muted); font: 600 .95rem/1 system-ui;
+  transition: transform .25s, background .25s, color .25s, border-color .25s, box-shadow .25s;
+}
+.close-card-btn:hover,
+.close-card-btn:focus-visible {
+  color: #fff; outline: none;
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  border-color: var(--accent);
+  box-shadow: 0 0 6px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 75%, transparent);
+  transform: rotate(90deg) scale(1.1);
+}
+.close-card-btn:active { transform: rotate(90deg) scale(.92); }
+
+.tags { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 16px 0 20px; }
+.tags li { padding: 5px 12px; border-radius: 99px; font-size: .8rem; border: 1px solid var(--border); }
+
+/* Botones */
+.btn {
+  display: inline-block; padding: 11px 20px; border-radius: 12px; border: 1px solid transparent;
+  font: 600 .95rem system-ui; text-decoration: none; cursor: pointer;
+  transition: transform .15s, box-shadow .2s;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: scale(.96); }
+.btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; box-shadow: 0 8px 24px -8px var(--accent); }
+.btn.primary:hover { box-shadow: 0 10px 30px -6px var(--accent), 0 0 18px -2px var(--accent); }
+
+/* ---------- MI PERFIL + CONTÁCTAME ---------- */
+.profile { width: min(460px, calc(100vw - 32px)); max-height: 84vh; max-height: 84dvh; overflow-y: auto; }
+.profile-head { display: flex; align-items: center; gap: 16px; margin: 8px 0 14px; padding-right: 40px; }
+.profile-head h2 { margin: 0; padding: 0; font-size: 1.3rem; line-height: 1.15; }
+.profile-head .role { margin-top: 4px; font-size: .85rem; }
+.avatar {
+  position: relative; flex: none; width: 76px; height: 76px; overflow: hidden;
+  display: grid; place-items: center; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff; font: 700 1.5rem system-ui; letter-spacing: .04em;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px color-mix(in srgb, var(--accent) 70%, transparent), 0 0 24px -2px var(--accent);
+}
+.avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.contact { margin-top: 4px; padding-top: 18px; border-top: 1px solid var(--border); }
+.contact h3 { font-size: 1.2rem; margin: 4px 0 14px; }
+.contact-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.links { display: flex; gap: 16px; flex-wrap: wrap; }
+.links a { color: var(--fg); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 2px; }
+.links a:hover { color: var(--accent); }
+
+/* ---------- SERVICIOS ---------- */
+.services { max-height: 84vh; max-height: 84dvh; overflow-y: auto; }
+.service-list { list-style: none; padding: 0; margin: 14px 0 20px; display: grid; gap: 8px; }
+.service-list li {
+  display: grid; gap: 2px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border);
+  transition: border-color .2s, box-shadow .2s;
+}
+.service-list li:hover { border-color: var(--accent); box-shadow: 0 0 18px -8px var(--accent); }
+.service-list b { font-size: .92rem; }
+.service-list span { font-size: .8rem; color: var(--muted); line-height: 1.4; }
+
+/* Controles de la configuración */
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.row.col { flex-direction: column; align-items: stretch; color: var(--muted); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.switch { position: relative; cursor: pointer; color: var(--muted); }
+.switch input { position: absolute; opacity: 0; }
+.switch i { width: 52px; height: 30px; border-radius: 99px; background: var(--border); position: relative; transition: background .3s; }
+.switch i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .3s; }
+.switch input:checked + i { background: var(--accent); }
+.switch input:checked + i::after { transform: translateX(22px); }
+
+.swatches { display: flex; gap: 10px; padding: 5px; }
+.swatch {
+  width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  background: var(--a);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25);
+  transition: transform .15s, box-shadow .2s;
+}
+.swatch:hover { transform: scale(1.1); }
+.swatch.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--fg); }
+
+.seg { display: flex; padding: 4px; gap: 4px; border-radius: 12px; border: 1px solid var(--border); }
+.seg button {
+  flex: 1; padding: 8px 6px; border: 0; border-radius: 9px; cursor: pointer;
+  background: transparent; color: var(--muted); font: 600 .82rem system-ui;
+  transition: background .2s, color .2s;
+}
+.seg button.on { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+
+@media (max-width: 640px) {
+  .project-card { padding: 20px; }
+  #settings-panel { padding: 20px; }
+}
+
+/* ---------- CAPA CSS3D (la pantalla 3D vive aquí, encima del canvas WebGL) ---------- */
+#css3d { position: fixed; inset: 0; z-index: 6; pointer-events: none; overflow: hidden; display: none; }
+
+/* [FID] stage = capa Lo-Fi (abajo) + iframe recortable (arriba) */
+.screen-stage {
+  position: relative; background: #05030f; border-radius: 6px; overflow: hidden;
+  box-shadow: 0 0 60px color-mix(in srgb, var(--c, #ff7ac6) 55%, transparent);
+}
+.screen-lofi {
+  position: absolute; inset: 0; overflow-y: auto; background: #f5f5f5;
+  pointer-events: none; scrollbar-width: thin;
+}
+.screen-lofi.interactive { pointer-events: auto; }            /* en modo Lo-Fi se puede hacer scroll */
+.screen-lofi-img { display: block; width: 100%; height: auto; user-select: none; }
+.screen-wrap { position: absolute; inset: 0; pointer-events: auto; }   /* el iframe sí recibe clics */
+.screen-wrap iframe { display: block; width: 100%; height: 100%; border: 0; background: #05030f; }
+.screen-divider {
+  position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; opacity: 0; pointer-events: none;
+  background: var(--c, #ff7ac6); box-shadow: 0 0 14px 2px var(--c, #ff7ac6);
+}
+.screen-loading {
+  position: absolute; right: 24px; bottom: 24px; display: none;
+  padding: 10px 20px; border-radius: 99px; pointer-events: none;
+  background: rgba(5, 3, 15, .88); border: 1px solid var(--c, #ff7ac6); color: #fff;
+  font: 600 20px system-ui; letter-spacing: .04em;
+}
+.screen-stage.loading .screen-loading { display: block; }
+
+/* ---------- BARRA DE CONTROLES DE LA PANTALLA 3D [BAR] ---------- */
+#vp-bar {
+  position: fixed; left: 50%; bottom: 22px; z-index: 30;
+  display: flex; align-items: center; gap: 4px; padding: 6px;
+  border-radius: 99px; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  background: var(--glass); backdrop-filter: blur(12px);
+  box-shadow: 0 0 28px -8px var(--accent);
+  opacity: 0; transform: translate(-50%, 16px); pointer-events: none;
+  transition: opacity .4s, transform .4s;
+}
+#vp-bar.open { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+#vp-bar button, #vp-bar a {
+  padding: 8px 14px; border: 0; border-radius: 99px; cursor: pointer;
+  background: transparent; color: var(--muted); text-decoration: none;
+  font: 600 .8rem system-ui; transition: background .2s, color .2s, box-shadow .2s;
+}
+#vp-bar button:hover, #vp-bar a:hover { color: var(--fg); }
+#vp-bar button.on {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff; box-shadow: 0 0 16px -2px var(--accent);
+}
+#vp-bar small { padding: 0 8px; color: var(--muted); font: 500 .72rem monospace; min-width: 84px; text-align: center; }
+
+/* [FID] Selector Baja fidelidad | Prototipo */
+#vp-bar .fid { display: flex; gap: 2px; padding: 3px; border-radius: 99px; border: 1px solid var(--border); }
+#vp-bar .fid[hidden] { display: none; }
+#vp-bar .sep { width: 1px; height: 22px; margin: 0 4px; background: var(--border); }
+#vp-bar .fid[hidden] + .sep { display: none; }
+
+@media (max-width: 640px) {
+  #vp-bar { flex-wrap: wrap; justify-content: center; width: max-content; max-width: calc(100vw - 24px); }
+  #vp-bar button, #vp-bar a { padding: 8px 10px; }
+  #vp-bar small { display: none; }
+  #vp-bar .sep { display: none; }
+}
+
+/* ---------- [JOY] JOYSTICK TÁCTIL (solo dispositivos táctiles) ---------- */
+#joystick, #joy-vert { display: none; }
+
+@media (pointer: coarse) {
+  .keys-row, .hint-desktop { display: none; }
+  .hint-touch { display: inline; }
+
+  #joystick {
+    display: block; position: fixed; z-index: 35;
+    left: calc(22px + env(safe-area-inset-left, 0px));
+    bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+    width: 132px; height: 132px;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+    transition: opacity .3s;
+  }
+  .joy-base {
+    position: relative; width: 100%; height: 100%; border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 14%, transparent) 0%, var(--glass) 72%);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 28px -8px var(--accent), inset 0 0 22px -10px var(--accent);
+  }
+  .joy-knob {
+    position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 0 18px var(--accent), 0 6px 14px rgba(0, 0, 0, .35);
+    transition: transform .18s ease-out;
+    will-change: transform;
+  }
+  #joystick.dragging .joy-knob { transition: none; }
+
+  #joy-vert {
+    display: grid; gap: 10px; position: fixed; z-index: 35;
+    right: calc(22px + env(safe-area-inset-right, 0px));
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px));   /* sobre el botón ⚙ */
+    touch-action: none; user-select: none; -webkit-user-select: none;
+    transition: opacity .3s;
+  }
+  #joy-vert button {
+    width: 52px; height: 52px; border-radius: 50%; padding: 0;
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    background: var(--glass); backdrop-filter: blur(10px); color: var(--fg);
+    font: 600 1.1rem system-ui; display: grid; place-items: center;
+    box-shadow: 0 0 22px -8px var(--accent);
+    touch-action: none; -webkit-tap-highlight-color: transparent;
+  }
+  #joy-vert button.pressed {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
+    box-shadow: 0 0 20px var(--accent);
+  }
+
+  /* con la pantalla 3D abierta, el joystick se oculta (no mueve la mariposa) */
+  body.screen-open #joystick, body.screen-open #joy-vert { opacity: 0; pointer-events: none; }
+
+  /* las tarjetas suben para no quedar tapadas por el joystick */
+  .project-card { bottom: calc(180px + env(safe-area-inset-bottom, 0px)); max-height: calc(100dvh - 210px); overflow-y: auto; }
+  .profile, .services { max-height: calc(100dvh - 210px); }
+  #vp-bar { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Las etiquetas flotantes (#labels, .tag3d) se estilizan desde main.js */
