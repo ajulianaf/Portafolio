@@ -4,6 +4,7 @@ import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer
 import { gsap } from 'gsap';
 import { createScenery } from './scenery.js';   // [SCENERY]
 import { createCaseModal } from './case-modal.js';   // [CASE] modal de caso de estudio
+import { createAboutModal } from './about.js';       // [ABOUT] modal Sobre mí
 
 /* =========================================================
    0 · CONFIGURACIÓN
@@ -506,20 +507,17 @@ addEventListener('blur', () => { Object.keys(keys).forEach((k) => (keys[k] = fal
 /* ---------- [JOY] Joystick táctil ---------- */
 const joyEl = document.getElementById('joystick');
 const joyKnob = joyEl.querySelector('.joy-knob');
-const joyUp = document.getElementById('joy-up');
-const joyDown = document.getElementById('joy-down');
-const joy = { x: 0, y: 0, vert: 0, id: null };      // x: derecha +, y: atrás + (arriba del joystick = adelante), vert: subir +
+const joy = { x: 0, y: 0, id: null };      // x: derecha +, y: atrás + (arriba del joystick = adelante)
 const isTouchUI = matchMedia('(pointer: coarse)').matches;
+const LOCK_Y = isTouchUI;                           // en táctil/responsive la mariposa vuela siempre a la misma altura (HOME.y)
 
 function setKnob(dx, dy) {
   joyKnob.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
 }
 function resetJoystick() {
-  joy.x = joy.y = joy.vert = 0;
+  joy.x = joy.y = 0;
   joy.id = null;
   joyEl.classList.remove('dragging');
-  joyUp.classList.remove('pressed');
-  joyDown.classList.remove('pressed');
   setKnob(0, 0);
 }
 function moveJoystick(e) {
@@ -560,22 +558,6 @@ joyEl.addEventListener('pointermove', (e) => { if (e.pointerId === joy.id) moveJ
   })
 );
 
-function bindVert(btn, dirVal) {
-  const on = (e) => {
-    if (screenMode) return;
-    e.preventDefault();
-    btn.setPointerCapture(e.pointerId);
-    joy.vert = dirVal;
-    btn.classList.add('pressed');
-    activateExperience();
-    autopilot = null;
-  };
-  const off = () => { if (joy.vert === dirVal) joy.vert = 0; btn.classList.remove('pressed'); };
-  btn.addEventListener('pointerdown', on);
-  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((ev) => btn.addEventListener(ev, off));
-}
-bindVert(joyUp, 1);
-bindVert(joyDown, -1);
 
 const velocity = new THREE.Vector3();
 const lookTarget = HOME.clone();
@@ -587,7 +569,6 @@ function updateButterfly(dt) {
     (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0)
   );
   dir.x += joy.x;                     // [JOY] el joystick suma al teclado (analógico: más inclinado = más rápido)
-  dir.y += joy.vert;
   dir.z += joy.y;
   dir.x = THREE.MathUtils.clamp(dir.x, -1, 1);
   dir.y = THREE.MathUtils.clamp(dir.y, -1, 1);
@@ -595,11 +576,14 @@ function updateButterfly(dt) {
 
   if (autopilot) {
     const to = autopilot.clone().sub(butterfly.position);
+    if (LOCK_Y) to.y = 0;                                        // altura fija: solo cuenta la distancia horizontal
     if (to.length() < CONFIG.autopilotStop) autopilot = null; else dir.copy(to);
   }
+  if (LOCK_Y) dir.y = 0;                                         // sin movimiento vertical
   if (dir.lengthSq() > 1 || autopilot) dir.normalize();          // [JOY] solo se normaliza si excede 1 (conserva el control analógico)
 
   velocity.lerp(dir.multiplyScalar(CONFIG.flySpeed), 1 - Math.exp(-CONFIG.smoothing * dt));
+  if (LOCK_Y) velocity.y = 0;
   const step = velocity.clone().multiplyScalar(dt);
   ghost = Math.max(0, ghost - dt);
   if (collisionReady && ghost <= 0) resolveCollisions(step);
@@ -610,7 +594,7 @@ function updateButterfly(dt) {
   if (stuckT > 1.2) { ghost = 2; stuckT = 0; }
 
   const b = CONFIG.bounds, p = butterfly.position;
-  p.y = THREE.MathUtils.clamp(p.y, b.yMin, b.yMax);
+  p.y = LOCK_Y ? HOME.y : THREE.MathUtils.clamp(p.y, b.yMin, b.yMax);
   const dx = p.x - HOME.x, dz = p.z - HOME.z, dist = Math.hypot(dx, dz);
   if (dist > CONFIG.flyRadius) {
     const k = CONFIG.flyRadius / dist;
@@ -690,7 +674,7 @@ document.querySelectorAll('.project-card .close-card-btn').forEach((btn) =>
 // Clic o tap fuera (pointerdown: no se dispara al soltar un slider fuera de la tarjeta)
 document.addEventListener('pointerdown', (e) => {
   if (!e.target.closest('#settings-panel, #settings-btn')) toggleSettings(false);   // cierra Configuración al pulsar fuera
-  if (e.target.closest('.project-card, .screen-stage, #vp-bar, #menu-btn, #menu, .tag3d, #settings-btn, #settings-panel, #joystick, #joy-vert, #case-modal')) return;   // [JOY] el joystick no cierra tarjetas · [CASE] el modal tampoco
+  if (e.target.closest('.project-card, .screen-stage, #vp-bar, #menu-btn, #menu, .tag3d, #settings-btn, #settings-panel, #joystick, #case-modal, #about-modal')) return;   // [JOY] el joystick no cierra tarjetas · [CASE] el modal tampoco
   if (screenMode) { closeFocused(); return; }                   // clic fuera con la pantalla abierta → la cierra
   if (!activeId) return;
   dismissCard();
@@ -719,6 +703,7 @@ menuBtn.addEventListener('click', () => toggleMenu());
 
 function showHero() {
   caseModal.close();                         // [CASE] cierra el modal si estaba abierto
+  aboutModal.close();                        // [ABOUT]
   closeFocused(true);                        // cierra la pantalla 3D sin animar
   resetJoystick();                           // [JOY]
   nearestRaw = null;
@@ -1178,6 +1163,30 @@ document.addEventListener('click', (e) => {
   if (!b) return;
   e.preventDefault();
   caseModal.open(b.dataset.case, b);
+});
+
+/* =========================================================
+   8e · [ABOUT] MODAL SOBRE MÍ (js/about.js) · botones con data-about
+   ========================================================= */
+const aboutModal = createAboutModal({
+  onOpen: () => {
+    document.body.classList.add('case-open');                   // reutiliza el bloqueo de teclas y el ocultar joystick
+    if (screenMode) closeFocused(true);
+    resetJoystick();
+    Object.keys(keys).forEach((k) => (keys[k] = false));
+    velocity.set(0, 0, 0);
+    toggleMenu(false);
+    toggleSettings(false);
+    dismissCard();
+  },
+  onClose: () => document.body.classList.remove('case-open'),
+});
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-about]');
+  if (!b) return;
+  e.preventDefault();
+  aboutModal.open(b);
 });
 
 /* =========================================================

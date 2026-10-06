@@ -22,7 +22,7 @@ const metrics = (arr = []) => (has(arr) ? `<div class="cs-metrics">${arr.map((m)
 
 const SECTIONS = [
   ['hero', 'Resumen'], ['context', 'Contexto'], ['research', 'Investigación'], ['definition', 'Definición'],
-  ['ideation', 'Ideación'], ['ui', 'Diseño UI'], ['usability', 'Pruebas'], ['results', 'Resultados'],
+  ['ideation', 'Ideación'], ['ui', 'Diseño UI'], ['results', 'Resultados'],
 ];
 
 /* =========================================================
@@ -52,11 +52,10 @@ function iaTree(ia = []) {
 
 function renderProcess(c) {
   const sec = (key, n, title, inner) => `<section class="cs-sec" id="cs-${key}" data-sec="${key}"><p class="cs-num">0${n}</p><h3>${esc(title)}</h3>${inner}</section>`;
-  const h = c.hero, cx = c.context, rs = c.research, df = c.definition, id = c.ideation, ui = c.ui, us = c.usability, rt = c.results || {};
+  const h = c.hero, cx = c.context, rs = c.research, df = c.definition, id = c.ideation, ui = c.ui, rt = c.results || {};
 
   const showResults = has(rt.metrics) || has(rt.learnings);
-  const showUsability = us && (us.setup || has(us.findings));
-  const visible = SECTIONS.filter(([k]) => (k !== 'results' || showResults) && (k !== 'usability' || showUsability));
+  const visible = SECTIONS.filter(([k]) => k !== 'results' || showResults);
 
   const nav = `<nav class="cs-nav" aria-label="Secciones del caso">${visible.map(([k, t], i) => `<button data-go="${k}"${i === 0 ? ' class="on"' : ''}>${t}</button>`).join('')}</nav>`;
 
@@ -66,7 +65,6 @@ function renderProcess(c) {
     <p class="cs-lead">${esc(h.summary)}</p>
     ${has(h.meta) ? `<dl class="cs-meta">${h.meta.map((m) => `<div><dt>${esc(m.k)}</dt><dd>${esc(m.v)}</dd></div>`).join('')}</dl>` : ''}
     ${metrics(h.metrics)}
-    ${h.cover ? fig(h.cover, 'Portada del proyecto') : ''}
   </section>`;
 
   const context = sec('context', 2, 'Contexto y problema', `
@@ -100,7 +98,7 @@ function renderProcess(c) {
     ${has(df.ia) ? `<h4>Arquitectura de la información</h4>${iaTree(df.ia)}` : ''}`);
 
   const ideation = sec('ideation', 5, 'Ideación y exploración', `
-    ${has(id.gallery) ? `<div class="cs-gallery">${id.gallery.map((g) => fig(g.src, g.caption)).join('')}</div>` : ''}
+    ${id.wireframe && id.wireframe.src ? `<div class="cs-gallery cs-single">${fig(id.wireframe.src, id.wireframe.caption || 'Wireframe de baja fidelidad')}</div>` : ''}
     ${has(id.decisions) ? `<h4>Decisiones de diseño</h4>
     <div class="cs-cards">${id.decisions.map((d) => `<article><h5>${esc(d.title)}</h5><p>${esc(d.text)}</p></article>`).join('')}</div>` : ''}`);
 
@@ -116,18 +114,11 @@ function renderProcess(c) {
     ${has(ui.components) ? `<h4>Componentes</h4><div class="cs-chips">${ui.components.map((m) => `<span>${esc(m)}</span>`).join('')}</div>` : ''}
     ${has(ui.gallery) ? `<div class="cs-gallery">${ui.gallery.map((g) => fig(g.src, g.caption)).join('')}</div>` : ''}`);
 
-  const usability = showUsability ? sec('usability', 7, 'Pruebas de usabilidad', `
-    ${us.setup ? `<p>${esc(us.setup)}</p>` : ''}
-    ${has(us.findings) ? `<div class="cs-table"><table>
-      <thead><tr><th>Qué falló</th><th>Qué se iteró</th></tr></thead>
-      <tbody>${us.findings.map((f) => `<tr><td>${esc(f.issue)}</td><td>${esc(f.fix)}</td></tr>`).join('')}</tbody>
-    </table></div>` : ''}`) : '';
-
   const results = showResults ? sec('results', 8, 'Resultados y aprendizajes', `
     ${metrics(rt.metrics)}
     ${has(rt.learnings) ? `<h4>Lecciones aprendidas</h4><ol class="cs-findings">${rt.learnings.map((l) => `<li>${esc(l)}</li>`).join('')}</ol>` : ''}`) : '';
 
-  return nav + hero + context + research + definition + ideation + uiSec + usability + results;
+  return nav + hero + context + research + definition + ideation + uiSec + results;
 }
 
 /* =========================================================

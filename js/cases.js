@@ -31,7 +31,6 @@ const tpl = () => ({
       { n: 'XX%', l: 'Métrica de impacto 2' },
       { n: 'X.X', l: 'Métrica de impacto 3' },
     ],
-    cover: 'assets/caso/portada.jpg',
   },
   context: {
     problem: 'Describe qué problema se quería resolver y por qué era importante.',
@@ -77,10 +76,7 @@ const tpl = () => ({
     ],
   },
   ideation: {
-    gallery: [
-      { src: 'assets/caso/boceto-1.jpg', caption: 'Bocetos iniciales a mano' },
-      { src: 'assets/caso/wireframes.png', caption: 'Wireframes de baja fidelidad' },
-    ],
+    wireframe: { src: 'assets/caso/wireframe.png', caption: 'Wireframe de baja fidelidad' },
     decisions: [
       { title: 'Decisión 1', text: 'Qué decidiste, qué alternativas descartaste y por qué.' },
       { title: 'Decisión 2', text: 'Explica el razonamiento detrás del cambio.' },
@@ -98,13 +94,6 @@ const tpl = () => ({
     components: ['Botones', 'Tarjetas de producto', 'Menú', 'Formularios', 'Chips de filtro', 'Alertas'],
     gallery: [{ src: 'assets/caso/ui-final.jpg', caption: 'Pantallas finales de alta fidelidad' }],
   },
-  usability: {
-    setup: 'Describe cuántas personas participaron, qué tareas se probaron y cómo (moderado o no moderado).',
-    findings: [
-      { issue: 'Qué falló en la prueba', fix: 'Qué cambiaste para resolverlo' },
-      { issue: 'Segundo problema encontrado', fix: 'Iteración aplicada' },
-    ],
-  },
   results: {
     metrics: [
       { n: 'XX%', l: 'Resultado final 1' },
@@ -115,8 +104,6 @@ const tpl = () => ({
   },
   demo: { url: '', external: '', notes: NOTES },
 });
-
-const ts = tpl();
 
 export const CASES = {
   /* ---------------------------------------------------------
@@ -135,7 +122,6 @@ export const CASES = {
         { k: 'Herramientas', v: 'Figma, HTML5, CSS3, JavaScript' },
       ],
       metrics: [],
-      cover: 'assets/stc/portada.jpg',
     },
 
     context: {
@@ -200,10 +186,7 @@ export const CASES = {
     },
 
     ideation: {
-      gallery: [
-        { src: 'assets/stc/boceto-1.jpg', caption: 'Bocetos iniciales' },
-        { src: 'assets/stc/wireframes.png', caption: 'Wireframes de baja fidelidad' },
-      ],
+      wireframe: { src: 'assets/stc/wireframes.png', caption: 'Wireframe de baja fidelidad' },
       decisions: [
         {
           title: 'Decisión de maquetación',
@@ -239,21 +222,6 @@ export const CASES = {
         'Tarjetas de producto',
         'Menú hamburguesa (móvil)',
       ],
-      gallery: [{ src: 'assets/stc/ui-final.jpg', caption: 'Diseño final' }],
-    },
-
-    usability: {
-      setup: 'Durante la maquetación en HTML5, CSS y JS se realizaron pruebas de funcionamiento directamente en el navegador.',
-      findings: [
-        {
-          issue: 'En pantallas móviles de celulares de gama media/baja, el carrusel de ofertas desalineaba el menú superior.',
-          fix: 'Se ajustó la grilla (CSS Grid / Flexbox) y las media queries para que el menú y las tarjetas de producto fueran 100% responsivos.',
-        },
-        {
-          issue: 'El menú de navegación ocupaba mucho espacio vertical en teléfonos.',
-          fix: 'Se implementó un menú desplegable tipo hamburguesa con JavaScript que colapsa las opciones (Inicio, Ubicación, Equipos, Tecnología) en pantallas pequeñas.',
-        },
-      ],
     },
 
     results: { metrics: [], learnings: [] },   // sin resultados: la sección se oculta
@@ -271,29 +239,128 @@ export const CASES = {
   },
 
   /* ---------------------------------------------------------
-     Three Star · pendiente de contenido real (usa la plantilla)
+     Three Star · contenido real
      --------------------------------------------------------- */
   ThreeStar: {
-    ...ts,
     eyebrow: 'Caso de estudio 02 · UX/UI',
     title: 'Three Star',
+
     hero: {
-      ...ts.hero,
-      summary: 'Proceso completo de diseño UI/UX en Figma, desde wireframes de baja fidelidad hasta un prototipo interactivo de alta fidelidad.',
-      cover: 'assets/threestar/portada.jpg',
+      summary: 'Diseño del prototipo interactivo UX/UI y de la plataforma web de Three Star, un estudio independiente de videojuegos integrado por tres ingenieros multimedia y desarrolladores. El sitio funciona como hub oficial para dar a conocer el estudio y su universo jugable principal, Soul Bond, e integra una tienda e-commerce de merchandising exclusivo: coleccionables, prendas y accesorios del juego.',
+      meta: [
+        { k: 'Mi rol', v: 'Diseñadora UX/UI (proyecto unipersonal)' },
+        { k: 'Duración', v: '4 semanas' },
+        { k: 'Herramientas', v: 'Figma (prototipado interactivo, auto-layout, variantes y sistema de diseño)' },
+        { k: 'Entregables', v: 'Prototipo navegable de alta fidelidad para escritorio y sistema de componentes UI' },
+      ],
+      metrics: [],
     },
+
+    context: {
+      problem: 'Three Star necesitaba una plataforma propia con un doble propósito: presentar la identidad del estudio indie ante la comunidad y los inversionistas, y ofrecer un punto de encuentro para los jugadores de Soul Bond. Había que centralizar en un solo lugar la narrativa del juego, el lore, el equipo creador y la venta de merchandising, sin perder la atmósfera fantástica del videojuego.',
+      audience: 'Jugadores y comunidad de Soul Bond: gamers y fans del universo interactivo que buscan novedades, el trasfondo de la historia o adquirir coleccionables oficiales. Nuevos jugadores y exploradores: personas que descubren el proyecto por primera vez y quieren entender de qué trata el videojuego y quiénes están detrás de su desarrollo.',
+      goals: [
+        'Negocio: posicionar la marca del estudio Three Star y validar la estructura de monetización directa mediante la tienda de merchandising de Soul Bond.',
+        'Usuario: permitir a los fans explorar la historia del juego (Soul Bond), conocer al equipo (Nosotros) y navegar por el catálogo de productos de forma fluida.',
+        'Producto: diseñar una interfaz temática e inmersiva con tonos místicos y violetas que represente el concepto de los tres sapos de colores del estudio.',
+      ],
+    },
+
+    research: {
+      methods: [
+        'Análisis de webs de estudios indie y videojuegos',
+        'Evaluación de arquitectura para hubs de videojuegos',
+      ],
+      findings: [
+        'Identidad del estudio como gancho: la historia detrás del nombre (tres amigos e ingenieros representados por tres sapos de colores) genera empatía y conexión directa con la comunidad de gamers.',
+        'Conexión lore y merchandising: quienes compran productos de un juego indie buscan llevarse una pieza del universo, como la Bitácora, el Cofre o los peluches de personajes.',
+        'Flujo de compra directo: el e-commerce integrado debe permitir seleccionar productos y ver el checkout de forma simple dentro de la misma experiencia de marca.',
+      ],
+      survey: [],
+      benchmark: null,
+    },
+
+    definition: {
+      personas: [
+        {
+          name: 'Mateo Silva',
+          meta: '22 años · Gamer e hincha de los videojuegos indie',
+          quote: 'Quiero ver de qué trata Soul Bond, ver sus trailers y consultar el precio del peluche o la camiseta del personaje que me gustó.',
+          goals: [
+            'Descubrir la propuesta de juego de Soul Bond en la sección interactiva.',
+            'Explorar la tienda y ver la oferta de merchandising oficial.',
+          ],
+          pains: [
+            'Páginas de juegos con enlaces rotos a las tiendas o sin información sobre los creadores.',
+          ],
+        },
+        {
+          name: 'Valentina Cruz',
+          meta: '25 años · Diseñadora de juegos / comunidad de desarrollo',
+          quote: 'Me interesa conocer qué estudio está detrás del proyecto y cuál es su trayectoria.',
+          goals: [
+            'Conocer la historia de Three Star y a sus tres fundadores en la pestaña Nosotros.',
+          ],
+          pains: [
+            'Webs de estudios frías que no muestran a las personas reales detrás del desarrollo.',
+          ],
+        },
+      ],
+      journey: [],
+      ia: [
+        { label: 'Inicio', children: ['Banner principal con branding de los 3 sapos', 'Productos destacados'] },
+        { label: 'Soul Bond', children: ['Sección principal del videojuego: lore, trailers e historia'] },
+        { label: 'Tienda', children: ['Selección de productos: tote bags, bitácoras, cofres, camisetas, peluches, etc.', 'Flujo de pago / checkout (modales de compra y confirmación)'] },
+        { label: 'Nosotros', children: ['Historia del estudio, los 3 ingenieros fundadores y los sapos de colores'] },
+      ],
+    },
+
     ideation: {
-      ...ts.ideation,
-      gallery: [{ src: 'assets/Wireframe Lo-Fi.png', caption: 'Wireframes de baja fidelidad' }],
+      wireframe: { src: 'assets/Wireframe Lo-Fi.png', caption: 'Wireframe de baja fidelidad' },
+      decisions: [
+        {
+          title: 'Decisión de maquetación',
+          text: 'Se definió un menú de navegación global (Inicio, Soul Bond, Tienda, Nosotros). Para la Tienda se ideó un catálogo dinámico tipo matriz: al hacer clic en un producto (peluche, bitácora, cofre) se despliega la ficha y la vista previa sin sacar al usuario de la vista general.',
+        },
+        {
+          title: 'Representación de la marca (tres sapos)',
+          text: 'Se integraron los sapos de colores del logo en secciones clave como Inicio y Nosotros, para reforzar el branding del equipo creador.',
+        },
+        {
+          title: 'Modales de compra integrados',
+          text: 'Para no romper la inmersión del sitio, la compra y el pago (Comprar / Pagar) se manejan con ventanas flotantes sobre el mismo universo visual.',
+        },
+      ],
     },
-    ui: { ...ts.ui, gallery: [{ src: 'assets/threestar/ui-final.jpg', caption: 'Pantallas de alta fidelidad' }] },
+
+    ui: {
+      palette: [
+        { name: 'Violeta místico', hex: '#7B61FF' },
+        { name: 'Morado noche', hex: '#6C5DD3' },
+        { name: 'Amarillo dorado', hex: '#FFD028' },
+      ],
+      type: {
+        display: 'Display creativa',
+        body: 'Sans-serif limpia',
+        note: 'Display creativa para el logotipo y los títulos de Three Star y Soul Bond; sans-serif limpia para las descripciones de productos, historias y textos de interfaz.',
+      },
+      components: [
+        'Tarjetas de catálogo interactivo (variantes activa / inactiva)',
+        'Modales de checkout con formulario de pago',
+        'Tarjetas de presentación del equipo fundador',
+      ],
+      gallery: [],
+    },
+
+    results: { metrics: [], learnings: [] },
+
     demo: {
       url: figmaEmbed(FIGMA_PROTO),
       external: FIGMA_PROTO,
       desktopOnly: true,           // solo escritorio: se ocultan los botones Tablet y Móvil
       notes: {
         ...NOTES,
-        desktop: { title: 'Prototipo · escritorio', text: 'Flujo completo navegable. Haz clic dentro de la pantalla para recorrer el prototipo.' },
+        desktop: { title: 'Prototipo · escritorio', text: 'Prototipo navegable de alta fidelidad. Haz clic dentro de la pantalla para recorrer el flujo.' },
       },
     },
   },
