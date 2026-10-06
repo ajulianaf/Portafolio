@@ -22,6 +22,7 @@ const SVG = {
   mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm9 7.2L4.6 7 4 8l8 5.6L20 8l-.6-1z"/></svg>',
   phone: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.250.2 2.450.570 3.6a1 1 0 0 1-.250 1z"/></svg>',
   download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16.1l-5.7-5.8 1.4-1.4L11 12.2zM5 18h14v3H5z"/></svg>',
+  back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m6-7-7 7 7 7"/></svg>',
   user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="4" fill="currentColor"/><path fill="currentColor" d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></svg>',
 };
 
@@ -103,6 +104,7 @@ export function createAboutModal({ onOpen, onClose } = {}) {
         <!-- Columna derecha: Chat -->
         <section class="ab-chat" aria-label="Chat">
           <header class="ab-chat-head">
+            <button class="ab-back" aria-label="Volver al perfil" title="Volver">${SVG.back}</button>
             ${avatarMe}
             <div><b>Angy</b><small><i class="ab-dot"></i> en línea</small></div>
             <span class="ab-chat-deco" aria-hidden="true">✧ ✦ ✧</span>
@@ -121,6 +123,7 @@ export function createAboutModal({ onOpen, onClose } = {}) {
   const log = root.querySelector('#ab-log');
   const replies = [...root.querySelectorAll('#ab-replies button')];
   const closeBtn = root.querySelector('.ab-close');
+  const backBtn = root.querySelector('.ab-back');
 
   let isOpen = false, busy = false, opener = null, timers = [];
   const later = (fn, ms) => { const t = setTimeout(fn, reduce ? Math.min(ms, 60) : ms); timers.push(t); return t; };
@@ -185,18 +188,19 @@ export function createAboutModal({ onOpen, onClose } = {}) {
     setTimeout(() => closeBtn.focus({ preventScroll: true }), 50);
   }
 
-  function close() {
+  function close(opts) {
     if (!isOpen) return;
     isOpen = false;
     clearTimers();
     root.classList.remove('open');
     root.setAttribute('aria-hidden', 'true');
-    onClose?.();
+    onClose?.(opts);
     opener?.focus?.({ preventScroll: true });
   }
 
-  closeBtn.addEventListener('click', close);
-  root.querySelector('.ab-backdrop').addEventListener('click', close);
+  closeBtn.addEventListener('click', () => close());
+  backBtn.addEventListener('click', () => close({ back: true }));   // flecha: vuelve a la tarjeta de perfil
+  root.querySelector('.ab-backdrop').addEventListener('click', () => close());
   document.addEventListener('keydown', (e) => {
     if (!isOpen) return;
     if (e.key === 'Escape') { e.preventDefault(); close(); return; }

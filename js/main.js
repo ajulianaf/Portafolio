@@ -792,9 +792,11 @@ document.getElementById('swatches').addEventListener('click', (e) => {
   if (sw.dataset.a) {
     root.setProperty('--accent', sw.dataset.a);
     root.setProperty('--accent-2', sw.dataset.a);   // mismo color: el degradado queda sólido
+    root.setProperty('--user-accent', sw.dataset.a);   // [ABOUT] el modal Sobre mí (chat incluido) usa este color
   } else {                                           // el primero restablece los colores originales
     root.removeProperty('--accent');
     root.removeProperty('--accent-2');
+    root.removeProperty('--user-accent');
   }
   document.querySelectorAll('.swatch').forEach((s) => s.classList.toggle('on', s === sw));
 });
@@ -1179,7 +1181,10 @@ const aboutModal = createAboutModal({
     toggleSettings(false);
     dismissCard();
   },
-  onClose: () => document.body.classList.remove('case-open'),
+  onClose: (opts) => {
+    document.body.classList.remove('case-open');
+    if (opts?.back) { isCardDismissed = false; dismissedId = null; }   // flecha ←: la tarjeta de perfil vuelve a mostrarse
+  },
 });
 
 document.addEventListener('click', (e) => {

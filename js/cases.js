@@ -186,7 +186,7 @@ export const CASES = {
     },
 
     ideation: {
-      wireframe: { src: 'assets/stc/wireframes.png', caption: 'Wireframe de baja fidelidad' },
+      wireframe: { src: 'assets/STC-LoFI.jpg', caption: 'Wireframe de baja fidelidad' },
       decisions: [
         {
           title: 'Decisión de maquetación',

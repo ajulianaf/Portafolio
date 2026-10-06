@@ -98,8 +98,7 @@ function renderProcess(c) {
     ${has(df.ia) ? `<h4>Arquitectura de la información</h4>${iaTree(df.ia)}` : ''}`);
 
   const ideation = sec('ideation', 5, 'Ideación y exploración', `
-    ${id.wireframe && id.wireframe.src ? `<div class="cs-gallery cs-single">${fig(id.wireframe.src, id.wireframe.caption || 'Wireframe de baja fidelidad')}</div>` : ''}
-    ${has(id.decisions) ? `<h4>Decisiones de diseño</h4>
+    <div class="cs-gallery cs-single">${fig((id.wireframe && id.wireframe.src) || 'assets/STC-LoFI.jpg', (id.wireframe && id.wireframe.caption) || 'Wireframe de baja fidelidad')}</div>    ${has(id.decisions) ? `<h4>Decisiones de diseño</h4>
     <div class="cs-cards">${id.decisions.map((d) => `<article><h5>${esc(d.title)}</h5><p>${esc(d.text)}</p></article>`).join('')}</div>` : ''}`);
 
   const uiSec = sec('ui', 6, 'Diseño final (UI)', `
