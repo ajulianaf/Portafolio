@@ -62,13 +62,15 @@ const STATIONS = [
 ];
 
 /* =========================================================
-   1 · ESCENA, CÁMARA, RENDERER, LUCES
+   1 · ESCENA, CÁMARA, RENDERER, LUCES (Sincronizado a #662D72)
    ========================================================= */
 const container = document.getElementById('scene');
 const loaderEl = document.getElementById('loader');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x140f2e);
-scene.fog = new THREE.Fog(0x140f2e, 12, 130);
+
+// Color de fondo unificado con Illustrator (#662D72)
+scene.background = new THREE.Color(0x662d72);
+scene.fog = new THREE.Fog(0x662d72, 12, 130);
 
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 300);
 camera.position.copy(HOME).add(CONFIG.cameraOffset);
@@ -79,12 +81,13 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.setClearColor(0x662d72);
 container.appendChild(renderer.domElement);
 
-const hemi = new THREE.HemisphereLight(0x8899ff, 0x221133, 0.8);
+const hemi = new THREE.HemisphereLight(0xffbbfd, 0x2e1038, 0.9);
 const sun = new THREE.DirectionalLight(0xffffff, 0.9);
 sun.position.set(5, 10, 7);
-const ambient = new THREE.AmbientLight(0xffffff, 0);
+const ambient = new THREE.AmbientLight(0xffffff, 0.1);
 scene.add(hemi, sun, ambient);
 
 /* =========================================================
@@ -153,7 +156,7 @@ for (let k = 0; k < CONFIG.sporeCount; k++) {
 }
 const spores = new THREE.Points(
   new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(sporePos, 3)),
-  new THREE.PointsMaterial({ color: 0x9ff0ff, size: 0.18, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending })
+  new THREE.PointsMaterial({ color: 0xff7ac6, size: 0.18, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending })
 );
 spores.frustumCulled = false;
 scene.add(spores);
@@ -167,7 +170,7 @@ grad.addColorStop(1, 'rgba(255,255,255,0)');
 mg.fillStyle = grad;
 mg.fillRect(0, 0, 128, 128);
 const mistTex = new THREE.CanvasTexture(mistCv);
-const mistColors = [0x3fd6e8, 0x8a5cff, 0xff6fd8];
+const mistColors = [0xb545d1, 0xff7ac6, 0x00e5ff];
 const mist = Array.from({ length: CONFIG.mistCount }, (_, i) => {
   const m = new THREE.Sprite(new THREE.SpriteMaterial({
     map: mistTex, color: mistColors[i % 3], transparent: true, opacity: 0.1 + Math.random() * 0.08,
@@ -199,7 +202,7 @@ const rimMist = Array.from({ length: CONFIG.rimMistCount }, (_, i) => {
 /* ---------- LUCIÉRNAGAS BIOLUMINISCENTES ---------- */
 const ffN = CONFIG.fireflyCount;
 const ffPos = new Float32Array(ffN * 3), ffCol = new Float32Array(ffN * 3), ffPhase = new Float32Array(ffN);
-const ffPalette = [0x3fe8ff, 0xff6fd8, 0x9d6bff, 0xffd479, 0x8affc1].map((c) => new THREE.Color(c));
+const ffPalette = [0xff7ac6, 0xb545d1, 0x00e5ff, 0xffd479].map((c) => new THREE.Color(c));
 for (let k = 0; k < ffN; k++) {
   const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * CONFIG.fireflyRadius, c = ffPalette[k % ffPalette.length];
   ffPos.set([Math.cos(a) * r, 0.6 + Math.random() * 9, Math.sin(a) * r], k * 3);
@@ -267,7 +270,7 @@ const scenery = createScenery({ scene, colors: STATIONS.map((s) => s.color) });
 
 /* ---------- TRANSICIÓN OSCURO ↔ CLARO ---------- */
 let mode = 0, targetMode = 0;                                 // 0 = oscuro, 1 = claro
-const bgDark = new THREE.Color(0x140f2e), bgLight = new THREE.Color(0xa9c4ff);
+const bgDark = new THREE.Color(0x662d72), bgLight = new THREE.Color(0xf7eff9);
 const L = THREE.MathUtils.lerp;
 
 function updateTheme(dt) {
@@ -277,9 +280,9 @@ function updateTheme(dt) {
   scene.fog.color.copy(scene.background);
   scene.fog.near = L(12, 35, mode);
   scene.fog.far = L(130, 200, mode);
-  hemi.intensity = L(0.8, 1.7, mode);
+  hemi.intensity = L(0.9, 1.7, mode);
   sun.intensity = L(0.9, 2.4, mode);
-  ambient.intensity = L(0, 1.0, mode);
+  ambient.intensity = L(0.1, 0.8, mode);
   renderer.toneMappingExposure = L(1, 1.35, mode);
 
   stars.position.copy(camera.position);
@@ -839,7 +842,7 @@ labelCss.textContent = `
   padding: 4px 11px; border-radius: 99px; cursor: pointer; font: 500 .72rem/1 system-ui; letter-spacing: .04em;
   border: 1px solid color-mix(in srgb, var(--c) 70%, transparent);
   box-shadow: 0 0 16px -4px var(--c);
-  background: color-mix(in srgb, var(--c) 12%, var(--glass, rgba(20,26,50,.6)));
+  background: color-mix(in srgb, var(--c) 12%, var(--glass, rgba(60,20,70,.65)));
   backdrop-filter: blur(6px); color: var(--fg, #fff);
   opacity: 0; pointer-events: none; transition: opacity .35s, box-shadow .2s; will-change: transform; }
 .tag3d.show { opacity: .8; pointer-events: auto; }
@@ -877,11 +880,7 @@ function updateLabels() {
 
 /* =========================================================
    8c · PANTALLA 3D (CSS3DRenderer + GSAP)
-        · STC: sitio web embebido
-        · Three Star: prototipo navegable de Figma  ⇄  wireframes Lo-Fi  [FID]
-        La pantalla SOLO aparece al pulsar "Ver caso completo".
    ========================================================= */
-// ⚠ Usa el enlace de PROTOTIPO de Figma (Present ▶ → Share prototype → copiar enlace): empieza por figma.com/proto/...
 const FIGMA_PROTOTYPE_URL = 'https://www.figma.com/proto/Ar4RSP2pW3M7tx8UeFVgPG/Three-Star?node-id=15-721&p=f&t=PeWDfCJFZydnP32f-0&scaling=scale-down&content-scaling=fixed&page-id=15%3A719';
 const figmaEmbed = (url) => 'https://www.figma.com/embed?embed_host=share&url=' + encodeURIComponent(url) + '&hide-ui=1&scaling=scale-down-width';
 
@@ -890,28 +889,26 @@ const PROJECTS = {
   ThreeStar: {
     kind: 'proto',
     url: figmaEmbed(FIGMA_PROTOTYPE_URL),
-    external: FIGMA_PROTOTYPE_URL,                 // enlace del botón ↗
-    lofi: ['assets/Wireframe Lo-Fi.png'],           // [FID] una o varias imágenes de wireframes (se apilan con scroll)
-    offset: new THREE.Vector3(0, 3.4, -0.5),       // dónde flota la pantalla respecto a la flor
+    external: FIGMA_PROTOTYPE_URL,
+    lofi: ['assets/Wireframe Lo-Fi.png'],
+    offset: new THREE.Vector3(0, 3.4, -0.5),
   },
 };
 
-// [BAR] Solo tamaño escritorio: la barra ya no ofrece Tablet ni Móvil
 const VIEWPORTS = {
-  desktop: { w: 1280, h: 720 },    // 16:9
+  desktop: { w: 1280, h: 720 },
 };
 
 const SCREEN = {
-  K: 0.00625,            // unidades 3D por píxel (escritorio = 8 unidades de ancho)
-  bezel: 0.18,           // grosor del marco
-  depth: 0.25,           // grosor del cuerpo
-  duration: 1.0,         // segundos del cambio de tamaño
-  reloadOnResize: false, // true = recarga el iframe al terminar el cambio de tamaño
+  K: 0.00625,
+  bezel: 0.18,
+  depth: 0.25,
+  duration: 1.0,
+  reloadOnResize: false,
 };
 
 let cssOn = false;
 
-/* --- Renderer CSS3D: segunda capa que comparte la misma cámara que WebGL --- */
 const css3d = new CSS3DRenderer();
 css3d.setSize(innerWidth, innerHeight);
 const cssLayer = css3d.domElement;
@@ -919,13 +916,12 @@ cssLayer.id = 'css3d';
 document.body.appendChild(cssLayer);
 function setCss(on) { cssOn = on; cssLayer.style.display = on ? 'block' : 'none'; }
 
-/* --- HTML de la pantalla: stage > [capa Lo-Fi] + [wrap > iframe] + divisor + "cargando" --- */
 const stage = document.createElement('div');
 stage.className = 'screen-stage';
-stage.style.pointerEvents = 'none';                  // el stage no captura clics; solo el iframe (wrap) y la capa Lo-Fi activa
-const lofiEl = document.createElement('div');        // [FID] imágenes de baja fidelidad (HTML = nítidas)
+stage.style.pointerEvents = 'none';
+const lofiEl = document.createElement('div');
 lofiEl.className = 'screen-lofi';
-const wrap = document.createElement('div');          // se recorta con clip-path → la "división" Lo-Fi | Prototipo
+const wrap = document.createElement('div');
 wrap.className = 'screen-wrap';
 const frame = document.createElement('iframe');
 frame.title = 'Caso de estudio';
@@ -939,30 +935,28 @@ loadingEl.className = 'screen-loading';
 loadingEl.textContent = 'Cargando…';
 stage.append(lofiEl, wrap, divider, loadingEl);
 
-/* --- Grupo 3D: marco + halo + objeto CSS3D --- */
 const screenGroup = new THREE.Group();
 screenGroup.visible = false;
 scene.add(screenGroup);
 
 const cssObj = new CSS3DObject(stage);
-cssObj.scale.setScalar(SCREEN.K);            // 1 px CSS = K unidades 3D (nunca cambia)
+cssObj.scale.setScalar(SCREEN.K);
 screenGroup.add(cssObj);
 
 const body = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshStandardMaterial({ color: 0x0a0818, roughness: 0.35, metalness: 0.7, emissive: 0xffffff, emissiveIntensity: 0.06 })
+  new THREE.MeshStandardMaterial({ color: 0x2e1038, roughness: 0.35, metalness: 0.7, emissive: 0xff7ac6, emissiveIntensity: 0.06 })
 );
 const edges = new THREE.LineSegments(
   new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)),
-  new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 })
+  new THREE.LineBasicMaterial({ color: 0xff7ac6, transparent: true, opacity: 0.9 })
 );
 const halo = new THREE.Mesh(
   new THREE.PlaneGeometry(1, 1),
-  new THREE.MeshBasicMaterial({ map: mistTex, color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending })
+  new THREE.MeshBasicMaterial({ map: mistTex, color: 0xff7ac6, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending })
 );
 screenGroup.add(body, edges, halo);
 
-/* --- [FID] Capa Lo-Fi: tus imágenes; si falta alguna, dibuja un wireframe de ejemplo --- */
 function lofiPlaceholder() {
   const c = document.createElement('canvas');
   c.width = 1280; c.height = 720;
@@ -989,16 +983,15 @@ function buildLofi(list) {
     img.alt = 'Wireframe de baja fidelidad';
     img.draggable = false;
     img.onerror = () => { img.onerror = null; img.src = lofiPlaceholder(); };
-    img.src = encodeURI(src);                        // el nombre lleva espacio: se codifica
+    img.src = encodeURI(src);
     return img;
   }));
   lofiEl.scrollTop = 0;
 }
 
-/* --- Estado animable por GSAP --- */
-const vp = { w: VIEWPORTS.desktop.w, h: VIEWPORTS.desktop.h };   // viewport del iframe
-const reveal = { v: 0 };                                          // 0 = oculta, 1 = visible
-const wipe = { p: 100 };                                          // 0..100: % de pantalla mostrado en modo Prototipo (100 = solo prototipo, 0 = solo Lo-Fi)
+const vp = { w: VIEWPORTS.desktop.w, h: VIEWPORTS.desktop.h };
+const reveal = { v: 0 };
+const wipe = { p: 100 };
 let fidelity = 'hifi';
 const bar = document.getElementById('vp-bar');
 const fidSeg = document.getElementById('fid-seg');
@@ -1006,16 +999,15 @@ const sizeEl = document.getElementById('vp-size');
 const openLink = document.getElementById('vp-open');
 const _fit = new THREE.Vector3();
 
-/* --- Reescalado sincrónico: iframe + marco + halo + división --- */
 function applyViewport() {
   const { K, bezel, depth } = SCREEN;
   const W = vp.w * K + bezel * 2, H = vp.h * K + bezel * 2;
   const proto = screenKind === 'proto';
 
-  stage.style.width = vp.w + 'px';            // el iframe cambia de viewport real → el sitio se reorganiza
+  stage.style.width = vp.w + 'px';
   stage.style.height = vp.h + 'px';
   stage.style.opacity = reveal.v;
-  wrap.style.clipPath = proto ? `inset(0 ${(100 - wipe.p).toFixed(2)}% 0 0)` : 'none';   // [FID] división Lo-Fi | Prototipo
+  wrap.style.clipPath = proto ? `inset(0 ${(100 - wipe.p).toFixed(2)}% 0 0)` : 'none';
   divider.style.left = wipe.p + '%';
   divider.style.opacity = proto && wipe.p > 0.5 && wipe.p < 99.5 ? 1 : 0;
 
@@ -1030,7 +1022,7 @@ function applyViewport() {
   sizeEl.textContent = `${Math.round(vp.w)} × ${Math.round(vp.h)}`;
 }
 
-function configureScreen(st, prj) {            // posición + colores de la flor
+function configureScreen(st, prj) {
   screenGroup.position.copy(st.pos).add(prj.offset);
   const c = new THREE.Color(st.color);
   body.material.emissive.copy(c);
@@ -1040,24 +1032,23 @@ function configureScreen(st, prj) {            // posición + colores de la flor
   openLink.href = prj.external || prj.url;
 }
 
-function markFidelity(modeName) {              // [FID] actualiza botones y capa Lo-Fi
+function markFidelity(modeName) {
   fidelity = modeName;
   fidSeg.querySelectorAll('[data-fid]').forEach((b) => b.classList.toggle('on', b.dataset.fid === modeName));
-  lofiEl.classList.toggle('interactive', modeName === 'lofi');   // en Lo-Fi se puede hacer scroll
+  lofiEl.classList.toggle('interactive', modeName === 'lofi');
 }
 
-function setFidelity(modeName) {               // [FID] barrido animado entre Lo-Fi y Prototipo
+function setFidelity(modeName) {
   if (screenKind !== 'proto' || modeName === fidelity) return;
   markFidelity(modeName);
   gsap.to(wipe, { p: modeName === 'hifi' ? 100 : 0, duration: 1.1, ease: 'power2.inOut', overwrite: true, onUpdate: applyViewport });
 }
 
-/* --- Cámara: encuadra la pantalla --- */
 function fitDistance() {
   const { K, bezel } = SCREEN;
   const W = vp.w * K + bezel * 2, H = vp.h * K + bezel * 2;
   const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  return Math.max(H / 2 / t, W / 2 / (t * camera.aspect)) * 1.2;   // 1.2 = margen
+  return Math.max(H / 2 / t, W / 2 / (t * camera.aspect)) * 1.2;
 }
 
 function updateScreenCamera(dt) {
@@ -1068,7 +1059,6 @@ function updateScreenCamera(dt) {
   camera.lookAt(lookTarget);
 }
 
-/* --- Abrir / cerrar (sirve para STC y Three Star) --- */
 function openScreen(id) {
   const prj = PROJECTS[id], st = STATIONS.find((s) => s.id === id);
   if (!prj || !st) return;
@@ -1076,19 +1066,19 @@ function openScreen(id) {
   gsap.killTweensOf([vp, reveal, wipe]);
   screenKind = prj.kind;
   screenMode = true;
-  document.body.classList.add('screen-open');                   // [JOY] oculta el joystick
+  document.body.classList.add('screen-open');
   resetJoystick();
   autopilot = null;
   Object.keys(keys).forEach((k) => (keys[k] = false));
   velocity.set(0, 0, 0);
-  dismissCard(id);                                              // cierra la tarjeta y evita que reaparezca al cerrar la pantalla
+  dismissCard(id);
 
   configureScreen(st, prj);
 
   const isProto = prj.kind === 'proto';
-  fidSeg.hidden = !isProto;                                     // el selector solo existe en Three Star
+  fidSeg.hidden = !isProto;
   if (isProto) buildLofi(prj.lofi);
-  markFidelity('hifi');                                         // [FID] arranca directamente en el prototipo navegable
+  markFidelity('hifi');
   wipe.p = 100;
 
   if (frame.dataset.url !== prj.url) {
@@ -1109,8 +1099,8 @@ function openScreen(id) {
 
 function closeScreen(instant = false) {
   if (!screenMode) return;
-  screenMode = false;                                           // la cámara vuelve sola a seguir a la mariposa
-  document.body.classList.remove('screen-open');                // [JOY] vuelve a mostrar el joystick
+  screenMode = false;
+  document.body.classList.remove('screen-open');
   bar.classList.remove('open');
   bar.setAttribute('aria-hidden', 'true');
   gsap.killTweensOf([vp, reveal, wipe]);
@@ -1118,7 +1108,7 @@ function closeScreen(instant = false) {
     screenGroup.visible = false;
     screenKind = null;
     setCss(false);
-    frame.src = 'about:blank';                                  // detiene audio/video y reinicia el prototipo
+    frame.src = 'about:blank';
     frame.dataset.url = '';
     stage.classList.remove('loading');
   };
@@ -1128,9 +1118,8 @@ function closeScreen(instant = false) {
 
 function closeFocused(instant = false) { closeScreen(instant); }
 
-/* --- Eventos --- */
 bar.addEventListener('click', (e) => {
-  const f = e.target.closest('[data-fid]');                     // [FID]
+  const f = e.target.closest('[data-fid]');
   if (f) setFidelity(f.dataset.fid);
 });
 document.getElementById('vp-close').addEventListener('click', () => closeFocused());
@@ -1143,13 +1132,12 @@ document.addEventListener('click', (e) => {
 });
 
 /* =========================================================
-   8d · [CASE] MODAL DE CASO DE ESTUDIO (js/case-modal.js + js/cases.js)
-        Se abre con los botones data-case="STC" / data-case="ThreeStar"
+   8d · [CASE] MODAL DE CASO DE ESTUDIO
    ========================================================= */
 const caseModal = createCaseModal({
   onOpen: () => {
     document.body.classList.add('case-open');
-    if (screenMode) closeFocused(true);                         // cierra la pantalla 3D si estaba abierta
+    if (screenMode) closeFocused(true);
     resetJoystick();
     Object.keys(keys).forEach((k) => (keys[k] = false));
     velocity.set(0, 0, 0);
@@ -1168,11 +1156,11 @@ document.addEventListener('click', (e) => {
 });
 
 /* =========================================================
-   8e · [ABOUT] MODAL SOBRE MÍ (js/about.js) · botones con data-about
+   8e · [ABOUT] MODAL SOBRE MÍ
    ========================================================= */
 const aboutModal = createAboutModal({
   onOpen: () => {
-    document.body.classList.add('case-open');                   // reutiliza el bloqueo de teclas y el ocultar joystick
+    document.body.classList.add('case-open');
     if (screenMode) closeFocused(true);
     resetJoystick();
     Object.keys(keys).forEach((k) => (keys[k] = false));
@@ -1183,7 +1171,7 @@ const aboutModal = createAboutModal({
   },
   onClose: (opts) => {
     document.body.classList.remove('case-open');
-    if (opts?.back) { isCardDismissed = false; dismissedId = null; }   // flecha ←: la tarjeta de perfil vuelve a mostrarse
+    if (opts?.back) { isCardDismissed = false; dismissedId = null; }
   },
 });
 
@@ -1203,7 +1191,7 @@ function animate() {
   try {
     if (mixer) mixer.update(dt);
     if (screenMode) {
-      updateScreenCamera(dt);                // la cámara enfoca la pantalla
+      updateScreenCamera(dt);
     } else if (active) {
       updateButterfly(dt);
       updateCamera(dt);
@@ -1219,7 +1207,7 @@ function animate() {
     if (!animate.failed) { animate.failed = true; console.error('Error en el bucle:', err); }
   }
   renderer.render(scene, camera);
-  if (cssOn) css3d.render(scene, camera);   // segunda capa (iframe), misma cámara
+  if (cssOn) css3d.render(scene, camera);
 }
 animate();
 
