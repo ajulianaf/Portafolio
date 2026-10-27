@@ -404,6 +404,7 @@ export const CASES = {
       meta: [
         { k: 'Mi rol', v: 'Diseñadora UX/UI · apoyo en la documentación del proceso y el desarrollo del prototipo' },
         { k: 'Equipo', v: 'Proyecto grupal' },
+        { k: 'Duración', v: 'X semanas' },                 // ← completa
         { k: 'Herramientas', v: 'Figma' },                  // ← ajusta si usaste otras
       ],
       metrics: [],
@@ -468,10 +469,10 @@ export const CASES = {
     ideation: {
       ...artis.ideation,
       gallery: [
-       // { src: 'assets/artis/mapa-de-empatia.png',   caption: 'Mapa de empatía de la usuaria tipo' },
-        //{ src: 'assets/artis/mapa-de-sitio.png',     caption: 'Mapa de sitio: arquitectura de información de Artis' },
-        //{ src: 'assets/artis/flujo-de-usuario.png',  caption: 'Flujo de usuario' },
-        //{ src: 'assets/artis/bocetos.png',           caption: 'Bocetos a mano de las pantallas principales' },
+        { src: 'assets/artis/mapa-de-empatia.png',   caption: 'Mapa de empatía de la usuaria tipo' },
+        { src: 'assets/artis/mapa-de-sitio.png',     caption: 'Mapa de sitio: arquitectura de información de Artis' },
+        { src: 'assets/artis/flujo-de-usuario.png',  caption: 'Flujo de usuario' },
+        { src: 'assets/artis/bocetos.png',           caption: 'Bocetos a mano de las pantallas principales' },
       ],
       decisions: [
         {
@@ -493,7 +494,12 @@ export const CASES = {
       ],
     },
 
-    ui: null,                                  // pendiente: aún no hay información de UI final
+    ui: {                                      // pendiente: aún no hay información de UI final
+      palette: [],
+      type: { display: '', body: '', note: '' },
+      components: [],
+      gallery: [],
+    },
     usability: null,
     results: { metrics: [], learnings: [] },
 
