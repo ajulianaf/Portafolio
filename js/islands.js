@@ -5,6 +5,12 @@ import * as THREE from 'three';
    Cada estación con `island: true` recibe su propia isla:
    disco de pasto, roca invertida, cristales luminosos,
    anillo giratorio, destello y chispas orbitando.
+
+   [COLISIONES] `colliders` expone las mallas sólidas de las islas
+   (pasto, roca, rocas colgantes y cristales menores) para que
+   main.js las sume a las colisiones de la mariposa.
+   El cristal central NO colisiona: es el faro de la estación y
+   el destino del viaje automático.
    ========================================================= */
 const rng = (s) => () => {
   s |= 0; s = (s + 0x6D2B79F5) | 0;
@@ -33,6 +39,7 @@ export function createIslands({ scene, stations }) {
   const rockDark = new THREE.Color(0x3a1a46), rockLight = new THREE.Color(0xa57fb5);
   const rockMat = new THREE.MeshStandardMaterial({ color: rockDark, flatShading: true, roughness: 1 });
   const items = [];
+  const colliders = [];                                       // [COLISIONES] mallas sólidas de todas las islas
 
   stations.filter((s) => s.island).forEach((s, idx) => {
     const rnd = rng(100 + idx * 17);
@@ -56,6 +63,7 @@ export function createIslands({ scene, stations }) {
     rock.rotation.x = Math.PI;
     rock.position.y = -0.25 - 2.1;
     g.add(top, rock);
+    colliders.push(top, rock);
 
     // Rocas colgantes
     for (let k = 0; k < 4; k++) {
@@ -64,6 +72,7 @@ export function createIslands({ scene, stations }) {
       m.rotation.x = Math.PI;
       m.position.set(Math.cos(a) * r, -3 - rnd() * 1.4, Math.sin(a) * r);
       g.add(m);
+      colliders.push(m);
     }
 
     // Borde de neón
@@ -71,7 +80,7 @@ export function createIslands({ scene, stations }) {
     rim.position.y = 0.27;
     g.add(rim);
 
-    // Cristal central
+    // Cristal central (faro de la estación: sin colisión)
     const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.7), glowMat);
     crystal.scale.y = 2.3;
     crystal.position.y = 1.45;
@@ -85,6 +94,7 @@ export function createIslands({ scene, stations }) {
       c.position.set(Math.cos(a) * r, 0.25 + h, Math.sin(a) * r);
       c.rotation.y = rnd() * 6.28;
       g.add(c);
+      colliders.push(c);
     }
 
     // Anillo giratorio sobre el cristal
@@ -112,8 +122,11 @@ export function createIslands({ scene, stations }) {
     items.push({ g, baseY: g.position.y, ph: rnd() * 6.28, crystal, halo, glow, sparks });
   });
 
+  root.updateMatrixWorld(true);                               // [COLISIONES] matrices listas antes del primer raycast
+
   return {
     group: root,
+    colliders,
     update(dt, t, mode) {
       rockMat.color.copy(rockDark).lerp(rockLight, mode);
       items.forEach((o) => {

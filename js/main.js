@@ -327,6 +327,12 @@ const _n = new THREE.Vector3(), _d = new THREE.Vector3(), _t = new THREE.Vector3
 const AXES = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].map((a) => new THREE.Vector3(...a));
 let colliders = [], collisionReady = false, bvhOk = false, ghost = 0, stuckT = 0;
 
+// [ISLANDS] las islas flotantes también son sólidas (pasto, roca, rocas colgantes y cristales menores)
+if (CONFIG.collisions) {
+  colliders.push(...islands.colliders);
+  collisionReady = true;
+}
+
 async function setupCollisions(env) {
   if (!CONFIG.collisions) return;
   env.traverse((o) => {
