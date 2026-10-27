@@ -1,10 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
-import { gsap } from 'gsap';
-import { createScenery } from './scenery.js';   // [SCENERY]
-import { createCaseModal } from './case-modal.js';   // [CASE] modal de caso de estudio
-import { createAboutModal } from './about.js';       // [ABOUT] modal Sobre mí
+import { createScenery } from './scenery.js';
+import { createIslands } from './islands.js';          // [ISLANDS] islas flotantes de proyecto
+import { createCaseModal } from './case-modal.js';      // modal de caso de estudio
 
 /* =========================================================
    0 · CONFIGURACIÓN
@@ -31,11 +29,12 @@ const CONFIG = {
   maxTilt: 0.15,
   turnMax: Math.PI / 2, turnSpeed: 5, turnDir: -1,
 
-  flyRadius: 12,
+  flyRadius: 22,                        // [ISLANDS] antes 12: ahora hay que llegar a las islas de proyecto
   bounds: { yMin: 0.5, yMax: 12 },
 
   DEBUG: true,
 
+  fogDensity: 0.012,                    // FogExp2 (modo oscuro)
   sporeCount: 600,
   mistCount: 40,
   starCount: 900,
@@ -47,30 +46,30 @@ const CONFIG = {
   fireflyRadius: 22,
   labelHeight: 4.5,
 
-  joyRadius: 46,          // [JOY] recorrido máximo de la perilla (px)
-  joyDeadzone: 0.12,      // [JOY] zona muerta (0–1)
+  joyRadius: 46,          // recorrido máximo de la perilla (px)
+  joyDeadzone: 0.12,      // zona muerta (0–1)
 };
 
 const HOME = new THREE.Vector3(0, 5, 0);
 
 // Estaciones (cada id debe tener su tarjeta <section id="panel-ID"> en el HTML y su botón data-goto="ID" en el menú)
+// island: true → esa estación flota en su propia isla (ver js/islands.js)
 const STATIONS = [
-  { id: 'perfil',    label: 'Mi perfil',  node: '', pos: new THREE.Vector3(-6.0, 0.5, 3.8),  offset: new THREE.Vector3(0, 1.5, 0), color: 0x00e5ff },   // flor izquierda: perfil + contáctame
-  { id: 'STC',       label: 'STC',        node: '', pos: new THREE.Vector3(-4.5, 3.8, -5.2), offset: new THREE.Vector3(0, 1.5, 0), color: 0xff4fd8 },
-  { id: 'ThreeStar', label: 'Three Star', node: '', pos: new THREE.Vector3(-2.9, 2.5, -4.3), offset: new THREE.Vector3(0, 1.5, 0), color: 0x9d6bff },
-  { id: 'servicios', label: 'Servicios',  node: '', pos: new THREE.Vector3(5.8, 0.4, -0.9),  offset: new THREE.Vector3(0, 1.5, 0), color: 0xffd479 },   // flor derecha
+  { id: 'perfil',    label: 'Mi perfil',        node: '', pos: new THREE.Vector3(-6.0, 0.5, 3.8),  offset: new THREE.Vector3(0, 1.5, 0), color: 0x00e5ff },
+  { id: 'STC',       label: 'STComunicaciones', node: '', pos: new THREE.Vector3(-11, 3.5, -12),   offset: new THREE.Vector3(0, 1.5, 0), color: 0xff4fd8, island: true },
+  { id: 'ThreeStar', label: 'Three Star',       node: '', pos: new THREE.Vector3(0, 5.5, -18),     offset: new THREE.Vector3(0, 1.5, 0), color: 0x9d6bff, island: true },
+  { id: 'Artis',     label: 'Artis',            node: '', pos: new THREE.Vector3(11, 3.5, -12),    offset: new THREE.Vector3(0, 1.5, 0), color: 0x00e5ff, island: true },
+  { id: 'servicios', label: 'Servicios',        node: '', pos: new THREE.Vector3(5.8, 0.4, -0.9),  offset: new THREE.Vector3(0, 1.5, 0), color: 0xffd479 },
 ];
 
 /* =========================================================
-   1 · ESCENA, CÁMARA, RENDERER, LUCES (Sincronizado a #662D72)
+   1 · ESCENA, CÁMARA, RENDERER, LUCES
    ========================================================= */
 const container = document.getElementById('scene');
 const loaderEl = document.getElementById('loader');
 const scene = new THREE.Scene();
-
-// Color de fondo unificado con Illustrator (#662D72)
-scene.background = new THREE.Color(0x662d72);
-scene.fog = new THREE.Fog(0x662d72, 12, 130);
+scene.background = new THREE.Color(0x662d72);                    // Aubergine
+scene.fog = new THREE.FogExp2(0x662d72, CONFIG.fogDensity);
 
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 300);
 camera.position.copy(HOME).add(CONFIG.cameraOffset);
@@ -81,13 +80,12 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.setClearColor(0x662d72);
 container.appendChild(renderer.domElement);
 
-const hemi = new THREE.HemisphereLight(0xffbbfd, 0x2e1038, 0.9);
+const hemi = new THREE.HemisphereLight(0xe0b0ff, 0x3a1546, 0.8);
 const sun = new THREE.DirectionalLight(0xffffff, 0.9);
 sun.position.set(5, 10, 7);
-const ambient = new THREE.AmbientLight(0xffffff, 0.1);
+const ambient = new THREE.AmbientLight(0xffffff, 0);
 scene.add(hemi, sun, ambient);
 
 /* =========================================================
@@ -156,7 +154,7 @@ for (let k = 0; k < CONFIG.sporeCount; k++) {
 }
 const spores = new THREE.Points(
   new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(sporePos, 3)),
-  new THREE.PointsMaterial({ color: 0xff7ac6, size: 0.18, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending })
+  new THREE.PointsMaterial({ color: 0x9ff0ff, size: 0.18, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending })
 );
 spores.frustumCulled = false;
 scene.add(spores);
@@ -170,7 +168,7 @@ grad.addColorStop(1, 'rgba(255,255,255,0)');
 mg.fillStyle = grad;
 mg.fillRect(0, 0, 128, 128);
 const mistTex = new THREE.CanvasTexture(mistCv);
-const mistColors = [0xb545d1, 0xff7ac6, 0x00e5ff];
+const mistColors = [0x00e5ff, 0xff7ac6, 0xff4fd8];                  // cian y magentas de la marca
 const mist = Array.from({ length: CONFIG.mistCount }, (_, i) => {
   const m = new THREE.Sprite(new THREE.SpriteMaterial({
     map: mistTex, color: mistColors[i % 3], transparent: true, opacity: 0.1 + Math.random() * 0.08,
@@ -202,7 +200,7 @@ const rimMist = Array.from({ length: CONFIG.rimMistCount }, (_, i) => {
 /* ---------- LUCIÉRNAGAS BIOLUMINISCENTES ---------- */
 const ffN = CONFIG.fireflyCount;
 const ffPos = new Float32Array(ffN * 3), ffCol = new Float32Array(ffN * 3), ffPhase = new Float32Array(ffN);
-const ffPalette = [0xff7ac6, 0xb545d1, 0x00e5ff, 0xffd479].map((c) => new THREE.Color(c));
+const ffPalette = [0x00e5ff, 0xff7ac6, 0x9d6bff, 0xffd479, 0x8affc1].map((c) => new THREE.Color(c));
 for (let k = 0; k < ffN; k++) {
   const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * CONFIG.fireflyRadius, c = ffPalette[k % ffPalette.length];
   ffPos.set([Math.cos(a) * r, 0.6 + Math.random() * 9, Math.sin(a) * r], k * 3);
@@ -265,12 +263,16 @@ const clouds = Array.from({ length: CONFIG.cloudCount }, () => {
   scene.add(c);
   return c;
 });
-/* [SCENERY] Panorama: cielo, cordilleras, mar de nubes e islotes */
-const scenery = createScenery({ scene, colors: STATIONS.map((s) => s.color) });
+
+/* [SCENERY] Panorama: cielo, cordilleras, mar de nubes e islotes decorativos */
+const scenery = createScenery({ scene, colors: [0xff7ac6, 0x00e5ff, 0xff4fd8, 0x9d6bff] });
+
+/* [ISLANDS] Una isla flotante independiente por cada proyecto */
+const islands = createIslands({ scene, stations: STATIONS });
 
 /* ---------- TRANSICIÓN OSCURO ↔ CLARO ---------- */
-let mode = 0, targetMode = 0;                                 // 0 = oscuro, 1 = claro
-const bgDark = new THREE.Color(0x662d72), bgLight = new THREE.Color(0xf7eff9);
+let mode = 0, targetMode = 0;                                 // 0 = oscuro (Aubergine), 1 = claro (lila)
+const bgDark = new THREE.Color(0x662d72), bgLight = new THREE.Color(0xe8c8ef);
 const L = THREE.MathUtils.lerp;
 
 function updateTheme(dt) {
@@ -278,11 +280,10 @@ function updateTheme(dt) {
   fx = L(fx, targetFx, 1 - Math.exp(-4 * dt));
   scene.background.lerpColors(bgDark, bgLight, mode);
   scene.fog.color.copy(scene.background);
-  scene.fog.near = L(12, 35, mode);
-  scene.fog.far = L(130, 200, mode);
-  hemi.intensity = L(0.9, 1.7, mode);
+  scene.fog.density = L(CONFIG.fogDensity, CONFIG.fogDensity * 0.5, mode);   // FogExp2: se anima la densidad
+  hemi.intensity = L(0.8, 1.7, mode);
   sun.intensity = L(0.9, 2.4, mode);
-  ambient.intensity = L(0.1, 0.8, mode);
+  ambient.intensity = L(0, 1.0, mode);
   renderer.toneMappingExposure = L(1, 1.35, mode);
 
   stars.position.copy(camera.position);
@@ -409,7 +410,7 @@ async function loadEnvironment() {
     placeStation(i);
   });
 
-  // Calibración: clic sobre una flor → imprime su coordenada
+  // Calibración: clic sobre el entorno → imprime su coordenada
   if (CONFIG.DEBUG) {
     const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
     renderer.domElement.addEventListener('click', (e) => {
@@ -483,8 +484,7 @@ const MOVE_KEYS = ['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft'
 const EXTRA_KEYS = ['Space','ShiftLeft','ShiftRight'];
 const keys = {};
 let autopilot = null;
-let screenMode = false;                       // true = la cámara enfoca la pantalla 3D
-let screenKind = null;                        // 'site' (STC) | 'proto' (Three Star) | null
+let caseOpen = false;                         // true = el modal de caso de estudio está abierto
 let nearestRaw = null;                        // estación más cercana (aunque su tarjeta esté cerrada)
 
 addEventListener('keydown', (e) => {
@@ -493,8 +493,7 @@ addEventListener('keydown', (e) => {
     console.log(`new THREE.Vector3(${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)})`);
     return;
   }
-  if (document.body.classList.contains('case-open')) return;              // [CASE] con el modal abierto, WASD no mueve la mariposa
-  if (screenMode) { if (e.code === 'Escape') closeFocused(); return; }   // con la pantalla abierta, WASD no mueve la mariposa
+  if (caseOpen) return;                        // con el modal abierto, WASD no mueve la mariposa
   const isMove = MOVE_KEYS.includes(e.code);
   if (!isMove && !EXTRA_KEYS.includes(e.code)) return;
   if (e.target.matches('input, textarea')) return;
@@ -507,20 +506,22 @@ addEventListener('keydown', (e) => {
 addEventListener('keyup', (e) => { keys[e.code] = false; });
 addEventListener('blur', () => { Object.keys(keys).forEach((k) => (keys[k] = false)); resetJoystick(); });
 
-/* ---------- [JOY] Joystick táctil ---------- */
+/* ---------- Joystick táctil ---------- */
 const joyEl = document.getElementById('joystick');
 const joyKnob = joyEl.querySelector('.joy-knob');
-const joy = { x: 0, y: 0, id: null };      // x: derecha +, y: atrás + (arriba del joystick = adelante)
-const isTouchUI = matchMedia('(pointer: coarse)').matches;
-const LOCK_Y = isTouchUI;                           // en táctil/responsive la mariposa vuela siempre a la misma altura (HOME.y)
+const joyUp = document.getElementById('joy-up');
+const joyDown = document.getElementById('joy-down');
+const joy = { x: 0, y: 0, vert: 0, id: null };      // x: derecha +, y: atrás + (arriba del joystick = adelante), vert: subir +
 
 function setKnob(dx, dy) {
   joyKnob.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
 }
 function resetJoystick() {
-  joy.x = joy.y = 0;
+  joy.x = joy.y = joy.vert = 0;
   joy.id = null;
   joyEl.classList.remove('dragging');
+  joyUp.classList.remove('pressed');
+  joyDown.classList.remove('pressed');
   setKnob(0, 0);
 }
 function moveJoystick(e) {
@@ -539,11 +540,11 @@ function moveJoystick(e) {
   }
   joy.x = nx;
   joy.y = ny;
-  if (mag >= CONFIG.joyDeadzone && !screenMode) { activateExperience(); autopilot = null; }   // el primer toque oculta el hero
+  if (mag >= CONFIG.joyDeadzone && !caseOpen) { activateExperience(); autopilot = null; }   // el primer toque oculta el hero
 }
 
 joyEl.addEventListener('pointerdown', (e) => {
-  if (screenMode) return;
+  if (caseOpen) return;
   e.preventDefault();
   joy.id = e.pointerId;
   joyEl.setPointerCapture(e.pointerId);
@@ -561,6 +562,22 @@ joyEl.addEventListener('pointermove', (e) => { if (e.pointerId === joy.id) moveJ
   })
 );
 
+function bindVert(btn, dirVal) {
+  const on = (e) => {
+    if (caseOpen) return;
+    e.preventDefault();
+    btn.setPointerCapture(e.pointerId);
+    joy.vert = dirVal;
+    btn.classList.add('pressed');
+    activateExperience();
+    autopilot = null;
+  };
+  const off = () => { if (joy.vert === dirVal) joy.vert = 0; btn.classList.remove('pressed'); };
+  btn.addEventListener('pointerdown', on);
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((ev) => btn.addEventListener(ev, off));
+}
+bindVert(joyUp, 1);
+bindVert(joyDown, -1);
 
 const velocity = new THREE.Vector3();
 const lookTarget = HOME.clone();
@@ -571,7 +588,8 @@ function updateButterfly(dt) {
     (keys.Space ? 1 : 0) - (keys.ShiftLeft || keys.ShiftRight ? 1 : 0),
     (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0)
   );
-  dir.x += joy.x;                     // [JOY] el joystick suma al teclado (analógico: más inclinado = más rápido)
+  dir.x += joy.x;                     // el joystick suma al teclado (analógico: más inclinado = más rápido)
+  dir.y += joy.vert;
   dir.z += joy.y;
   dir.x = THREE.MathUtils.clamp(dir.x, -1, 1);
   dir.y = THREE.MathUtils.clamp(dir.y, -1, 1);
@@ -579,14 +597,11 @@ function updateButterfly(dt) {
 
   if (autopilot) {
     const to = autopilot.clone().sub(butterfly.position);
-    if (LOCK_Y) to.y = 0;                                        // altura fija: solo cuenta la distancia horizontal
     if (to.length() < CONFIG.autopilotStop) autopilot = null; else dir.copy(to);
   }
-  if (LOCK_Y) dir.y = 0;                                         // sin movimiento vertical
-  if (dir.lengthSq() > 1 || autopilot) dir.normalize();          // [JOY] solo se normaliza si excede 1 (conserva el control analógico)
+  if (dir.lengthSq() > 1 || autopilot) dir.normalize();          // solo se normaliza si excede 1 (conserva el control analógico)
 
   velocity.lerp(dir.multiplyScalar(CONFIG.flySpeed), 1 - Math.exp(-CONFIG.smoothing * dt));
-  if (LOCK_Y) velocity.y = 0;
   const step = velocity.clone().multiplyScalar(dt);
   ghost = Math.max(0, ghost - dt);
   if (collisionReady && ghost <= 0) resolveCollisions(step);
@@ -597,7 +612,7 @@ function updateButterfly(dt) {
   if (stuckT > 1.2) { ghost = 2; stuckT = 0; }
 
   const b = CONFIG.bounds, p = butterfly.position;
-  p.y = LOCK_Y ? HOME.y : THREE.MathUtils.clamp(p.y, b.yMin, b.yMax);
+  p.y = THREE.MathUtils.clamp(p.y, b.yMin, b.yMax);
   const dx = p.x - HOME.x, dz = p.z - HOME.z, dist = Math.hypot(dx, dz);
   if (dist > CONFIG.flyRadius) {
     const k = CONFIG.flyRadius / dist;
@@ -665,32 +680,58 @@ function updateProximity() {
   }
 }
 
-// Botón X de cada tarjeta: la cierra y frena la propagación del clic (el ✕ de Configuración se gestiona aparte)
+// Botón X de cada tarjeta: la cierra y frena la propagación del clic (el ✕ de Configuración y el del modal se gestionan aparte)
 document.querySelectorAll('.project-card .close-card-btn').forEach((btn) =>
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (screenMode) closeFocused();
-    else dismissCard(btn.closest('.project-card').id.replace('panel-', ''));
+    dismissCard(btn.closest('.project-card').id.replace('panel-', ''));
   })
 );
 
 // Clic o tap fuera (pointerdown: no se dispara al soltar un slider fuera de la tarjeta)
 document.addEventListener('pointerdown', (e) => {
-  if (!e.target.closest('#settings-panel, #settings-btn')) toggleSettings(false);   // cierra Configuración al pulsar fuera
-  if (e.target.closest('.project-card, .screen-stage, #vp-bar, #menu-btn, #menu, .tag3d, #settings-btn, #settings-panel, #joystick, #case-modal, #about-modal')) return;   // [JOY] el joystick no cierra tarjetas · [CASE] el modal tampoco
-  if (screenMode) { closeFocused(); return; }                   // clic fuera con la pantalla abierta → la cierra
+  if (caseOpen) return;                                          // el modal gestiona sus propios cierres
+  if (!e.target.closest('#settings-panel, #settings-btn')) toggleSettings(false);
+  if (e.target.closest('.project-card, #menu-btn, #menu, .tag3d, #settings-btn, #settings-panel, #joystick, #joy-vert')) return;
   if (!activeId) return;
   dismissCard();
 });
 
 addEventListener('keydown', (e) => {                            // Esc también cierra
-  if (e.code !== 'Escape') return;
+  if (e.code !== 'Escape' || caseOpen) return;
   toggleSettings(false);
   dismissCard();
 });
 
 /* =========================================================
-   7 · MENÚ → viaje suave a la flor
+   6b · MODAL DE CASO DE ESTUDIO (Proceso UX/UI + Demo 3D)
+   ========================================================= */
+const caseModal = createCaseModal({
+  onOpen: () => {
+    caseOpen = true;
+    document.body.classList.add('modal-open');
+    resetJoystick();
+    autopilot = null;
+    Object.keys(keys).forEach((k) => (keys[k] = false));
+    velocity.set(0, 0, 0);
+  },
+  onClose: () => {
+    caseOpen = false;
+    document.body.classList.remove('modal-open');
+  },
+});
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-project]');
+  if (!b) return;
+  e.preventDefault();
+  const id = b.dataset.project;
+  dismissCard(id);                                              // oculta la tarjeta; no reaparece mientras sigas en la zona
+  caseModal.open(id, b);
+});
+
+/* =========================================================
+   7 · MENÚ → viaje suave a la isla
    ========================================================= */
 const menuBtn = document.getElementById('menu-btn');
 const menu = document.getElementById('menu');
@@ -705,10 +746,8 @@ function toggleMenu(force) {
 menuBtn.addEventListener('click', () => toggleMenu());
 
 function showHero() {
-  caseModal.close();                         // [CASE] cierra el modal si estaba abierto
-  aboutModal.close();                        // [ABOUT]
-  closeFocused(true);                        // cierra la pantalla 3D sin animar
-  resetJoystick();                           // [JOY]
+  caseModal.close();
+  resetJoystick();
   nearestRaw = null;
   active = false;
   autopilot = null;
@@ -795,11 +834,9 @@ document.getElementById('swatches').addEventListener('click', (e) => {
   if (sw.dataset.a) {
     root.setProperty('--accent', sw.dataset.a);
     root.setProperty('--accent-2', sw.dataset.a);   // mismo color: el degradado queda sólido
-    root.setProperty('--user-accent', sw.dataset.a);   // [ABOUT] el modal Sobre mí (chat incluido) usa este color
-  } else {                                           // el primero restablece los colores originales
+  } else {                                           // el primero restablece magenta + cian
     root.removeProperty('--accent');
     root.removeProperty('--accent-2');
-    root.removeProperty('--user-accent');
   }
   document.querySelectorAll('.swatch').forEach((s) => s.classList.toggle('on', s === sw));
 });
@@ -813,17 +850,17 @@ document.getElementById('fx-seg').addEventListener('click', (e) => {
   document.querySelectorAll('#fx-seg button').forEach((x) => x.classList.toggle('on', x === b));
 });
 
-/* Etiquetas sobre las flores */
+/* Etiquetas sobre las islas */
 let showLabels = true;
 document.getElementById('labels-toggle').addEventListener('change', (e) => {
   showLabels = e.target.checked;
 });
 
 /* =========================================================
-   8b · ETIQUETAS FLOTANTES (HTML sobre las flores)
+   8b · ETIQUETAS FLOTANTES (HTML sobre las islas)
    ========================================================= */
 function flyTo(st) {
-  if (screenMode) closeFocused();
+  if (caseOpen) caseModal.close();
   if (dismissedId === st.id) { isCardDismissed = false; dismissedId = null; }   // elegir la estación a propósito reabre su tarjeta
   activateExperience();
   autopilot = st.pos.clone().add(st.offset);
@@ -842,10 +879,10 @@ labelCss.textContent = `
   padding: 4px 11px; border-radius: 99px; cursor: pointer; font: 500 .72rem/1 system-ui; letter-spacing: .04em;
   border: 1px solid color-mix(in srgb, var(--c) 70%, transparent);
   box-shadow: 0 0 16px -4px var(--c);
-  background: color-mix(in srgb, var(--c) 12%, var(--glass, rgba(60,20,70,.65)));
+  background: color-mix(in srgb, var(--c) 14%, rgba(60,20,70,.65));
   backdrop-filter: blur(6px); color: var(--fg, #fff);
   opacity: 0; pointer-events: none; transition: opacity .35s, box-shadow .2s; will-change: transform; }
-.tag3d.show { opacity: .8; pointer-events: auto; }
+.tag3d.show { opacity: .85; pointer-events: auto; }
 .tag3d.show:hover { opacity: 1; border-color: var(--c); box-shadow: 0 0 24px -2px var(--c); }
 .tag3d b { font-weight: 500; }
 .tag3d::after { content: ""; position: absolute; left: 50%; top: 100%; width: 1px; height: 14px;
@@ -869,7 +906,7 @@ function updateLabels() {
     _lv.y += CONFIG.labelHeight;
     const dist = camera.position.distanceTo(_lv);
     _lv.project(camera);
-    const show = showLabels && active && !screenMode && s.id !== activeId && _lv.z < 1 && Math.abs(_lv.x) < 1.1 && Math.abs(_lv.y) < 1.1;
+    const show = showLabels && active && !caseOpen && s.id !== activeId && _lv.z < 1 && Math.abs(_lv.x) < 1.1 && Math.abs(_lv.y) < 1.1;
     el.classList.toggle('show', show);
     if (!show) return;
     const x = (_lv.x * 0.5 + 0.5) * innerWidth, y = (-_lv.y * 0.5 + 0.5) * innerHeight;
@@ -879,310 +916,6 @@ function updateLabels() {
 }
 
 /* =========================================================
-   8c · PANTALLA 3D (CSS3DRenderer + GSAP)
-   ========================================================= */
-const FIGMA_PROTOTYPE_URL = 'https://www.figma.com/proto/Ar4RSP2pW3M7tx8UeFVgPG/Three-Star?node-id=15-721&p=f&t=PeWDfCJFZydnP32f-0&scaling=scale-down&content-scaling=fixed&page-id=15%3A719';
-const figmaEmbed = (url) => 'https://www.figma.com/embed?embed_host=share&url=' + encodeURIComponent(url) + '&hide-ui=1&scaling=scale-down-width';
-
-const PROJECTS = {
-  STC: { kind: 'site', url: 'https://www.stcomunicaciones.com.co', offset: new THREE.Vector3(0, 2.5, 4) },
-  ThreeStar: {
-    kind: 'proto',
-    url: figmaEmbed(FIGMA_PROTOTYPE_URL),
-    external: FIGMA_PROTOTYPE_URL,
-    lofi: ['assets/Wireframe Lo-Fi.png'],
-    offset: new THREE.Vector3(0, 3.4, -0.5),
-  },
-};
-
-const VIEWPORTS = {
-  desktop: { w: 1280, h: 720 },
-};
-
-const SCREEN = {
-  K: 0.00625,
-  bezel: 0.18,
-  depth: 0.25,
-  duration: 1.0,
-  reloadOnResize: false,
-};
-
-let cssOn = false;
-
-const css3d = new CSS3DRenderer();
-css3d.setSize(innerWidth, innerHeight);
-const cssLayer = css3d.domElement;
-cssLayer.id = 'css3d';
-document.body.appendChild(cssLayer);
-function setCss(on) { cssOn = on; cssLayer.style.display = on ? 'block' : 'none'; }
-
-const stage = document.createElement('div');
-stage.className = 'screen-stage';
-stage.style.pointerEvents = 'none';
-const lofiEl = document.createElement('div');
-lofiEl.className = 'screen-lofi';
-const wrap = document.createElement('div');
-wrap.className = 'screen-wrap';
-const frame = document.createElement('iframe');
-frame.title = 'Caso de estudio';
-frame.setAttribute('allow', 'fullscreen');
-frame.addEventListener('load', () => stage.classList.remove('loading'));
-wrap.appendChild(frame);
-const divider = document.createElement('div');
-divider.className = 'screen-divider';
-const loadingEl = document.createElement('div');
-loadingEl.className = 'screen-loading';
-loadingEl.textContent = 'Cargando…';
-stage.append(lofiEl, wrap, divider, loadingEl);
-
-const screenGroup = new THREE.Group();
-screenGroup.visible = false;
-scene.add(screenGroup);
-
-const cssObj = new CSS3DObject(stage);
-cssObj.scale.setScalar(SCREEN.K);
-screenGroup.add(cssObj);
-
-const body = new THREE.Mesh(
-  new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshStandardMaterial({ color: 0x2e1038, roughness: 0.35, metalness: 0.7, emissive: 0xff7ac6, emissiveIntensity: 0.06 })
-);
-const edges = new THREE.LineSegments(
-  new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)),
-  new THREE.LineBasicMaterial({ color: 0xff7ac6, transparent: true, opacity: 0.9 })
-);
-const halo = new THREE.Mesh(
-  new THREE.PlaneGeometry(1, 1),
-  new THREE.MeshBasicMaterial({ map: mistTex, color: 0xff7ac6, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending })
-);
-screenGroup.add(body, edges, halo);
-
-function lofiPlaceholder() {
-  const c = document.createElement('canvas');
-  c.width = 1280; c.height = 720;
-  const g = c.getContext('2d');
-  g.fillStyle = '#f5f5f5'; g.fillRect(0, 0, 1280, 720);
-  g.strokeStyle = '#111'; g.fillStyle = '#111'; g.lineWidth = 3;
-  const box = (x, y, w, h, cross) => {
-    g.strokeRect(x, y, w, h);
-    if (cross) { g.beginPath(); g.moveTo(x, y); g.lineTo(x + w, y + h); g.moveTo(x + w, y); g.lineTo(x, y + h); g.stroke(); }
-  };
-  const bar = (x, y, w) => g.fillRect(x, y, w, 8);
-  box(30, 24, 1220, 64); bar(56, 52, 150); [0, 1, 2, 3].forEach((i) => bar(780 + i * 110, 52, 80));
-  box(30, 112, 760, 360, true);
-  bar(830, 140, 380); bar(830, 170, 300); bar(830, 220, 420); bar(830, 246, 380); bar(830, 272, 400); box(830, 340, 190, 52);
-  [0, 1, 2].forEach((i) => box(30 + i * 412, 500, 396, 190, true));
-  g.font = '600 22px monospace'; g.fillText('assets/Wireframe Lo-Fi.png', 700, 440);
-  return c.toDataURL('image/png');
-}
-
-function buildLofi(list) {
-  lofiEl.replaceChildren(...list.map((src) => {
-    const img = new Image();
-    img.className = 'screen-lofi-img';
-    img.alt = 'Wireframe de baja fidelidad';
-    img.draggable = false;
-    img.onerror = () => { img.onerror = null; img.src = lofiPlaceholder(); };
-    img.src = encodeURI(src);
-    return img;
-  }));
-  lofiEl.scrollTop = 0;
-}
-
-const vp = { w: VIEWPORTS.desktop.w, h: VIEWPORTS.desktop.h };
-const reveal = { v: 0 };
-const wipe = { p: 100 };
-let fidelity = 'hifi';
-const bar = document.getElementById('vp-bar');
-const fidSeg = document.getElementById('fid-seg');
-const sizeEl = document.getElementById('vp-size');
-const openLink = document.getElementById('vp-open');
-const _fit = new THREE.Vector3();
-
-function applyViewport() {
-  const { K, bezel, depth } = SCREEN;
-  const W = vp.w * K + bezel * 2, H = vp.h * K + bezel * 2;
-  const proto = screenKind === 'proto';
-
-  stage.style.width = vp.w + 'px';
-  stage.style.height = vp.h + 'px';
-  stage.style.opacity = reveal.v;
-  wrap.style.clipPath = proto ? `inset(0 ${(100 - wipe.p).toFixed(2)}% 0 0)` : 'none';
-  divider.style.left = wipe.p + '%';
-  divider.style.opacity = proto && wipe.p > 0.5 && wipe.p < 99.5 ? 1 : 0;
-
-  body.scale.set(W, H, depth);
-  body.position.z = -depth / 2 - 0.01;
-  edges.scale.copy(body.scale);
-  edges.position.copy(body.position);
-  halo.scale.set(W * 1.8, H * 1.8, 1);
-  halo.position.z = -depth - 0.3;
-
-  screenGroup.scale.setScalar(Math.max(reveal.v, 0.001));
-  sizeEl.textContent = `${Math.round(vp.w)} × ${Math.round(vp.h)}`;
-}
-
-function configureScreen(st, prj) {
-  screenGroup.position.copy(st.pos).add(prj.offset);
-  const c = new THREE.Color(st.color);
-  body.material.emissive.copy(c);
-  edges.material.color.copy(c);
-  halo.material.color.copy(c);
-  stage.style.setProperty('--c', '#' + c.getHexString());
-  openLink.href = prj.external || prj.url;
-}
-
-function markFidelity(modeName) {
-  fidelity = modeName;
-  fidSeg.querySelectorAll('[data-fid]').forEach((b) => b.classList.toggle('on', b.dataset.fid === modeName));
-  lofiEl.classList.toggle('interactive', modeName === 'lofi');
-}
-
-function setFidelity(modeName) {
-  if (screenKind !== 'proto' || modeName === fidelity) return;
-  markFidelity(modeName);
-  gsap.to(wipe, { p: modeName === 'hifi' ? 100 : 0, duration: 1.1, ease: 'power2.inOut', overwrite: true, onUpdate: applyViewport });
-}
-
-function fitDistance() {
-  const { K, bezel } = SCREEN;
-  const W = vp.w * K + bezel * 2, H = vp.h * K + bezel * 2;
-  const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  return Math.max(H / 2 / t, W / 2 / (t * camera.aspect)) * 1.2;
-}
-
-function updateScreenCamera(dt) {
-  _fit.copy(screenGroup.position);
-  _fit.z += fitDistance();
-  camera.position.lerp(_fit, 1 - Math.exp(-3.5 * dt));
-  lookTarget.lerp(screenGroup.position, 1 - Math.exp(-5 * dt));
-  camera.lookAt(lookTarget);
-}
-
-function openScreen(id) {
-  const prj = PROJECTS[id], st = STATIONS.find((s) => s.id === id);
-  if (!prj || !st) return;
-
-  gsap.killTweensOf([vp, reveal, wipe]);
-  screenKind = prj.kind;
-  screenMode = true;
-  document.body.classList.add('screen-open');
-  resetJoystick();
-  autopilot = null;
-  Object.keys(keys).forEach((k) => (keys[k] = false));
-  velocity.set(0, 0, 0);
-  dismissCard(id);
-
-  configureScreen(st, prj);
-
-  const isProto = prj.kind === 'proto';
-  fidSeg.hidden = !isProto;
-  if (isProto) buildLofi(prj.lofi);
-  markFidelity('hifi');
-  wipe.p = 100;
-
-  if (frame.dataset.url !== prj.url) {
-    stage.classList.add('loading');
-    frame.src = prj.url;
-    frame.dataset.url = prj.url;
-  }
-
-  vp.w = VIEWPORTS.desktop.w; vp.h = VIEWPORTS.desktop.h; reveal.v = 0;
-  applyViewport();
-
-  setCss(true);
-  screenGroup.visible = true;
-  bar.classList.add('open');
-  bar.setAttribute('aria-hidden', 'false');
-  gsap.to(reveal, { v: 1, duration: 0.9, ease: 'back.out(1.3)', onUpdate: applyViewport });
-}
-
-function closeScreen(instant = false) {
-  if (!screenMode) return;
-  screenMode = false;
-  document.body.classList.remove('screen-open');
-  bar.classList.remove('open');
-  bar.setAttribute('aria-hidden', 'true');
-  gsap.killTweensOf([vp, reveal, wipe]);
-  const done = () => {
-    screenGroup.visible = false;
-    screenKind = null;
-    setCss(false);
-    frame.src = 'about:blank';
-    frame.dataset.url = '';
-    stage.classList.remove('loading');
-  };
-  if (instant) { reveal.v = 0; applyViewport(); done(); }
-  else gsap.to(reveal, { v: 0, duration: 0.45, ease: 'power2.in', onUpdate: applyViewport, onComplete: done });
-}
-
-function closeFocused(instant = false) { closeScreen(instant); }
-
-bar.addEventListener('click', (e) => {
-  const f = e.target.closest('[data-fid]');
-  if (f) setFidelity(f.dataset.fid);
-});
-document.getElementById('vp-close').addEventListener('click', () => closeFocused());
-document.addEventListener('click', (e) => {
-  const b = e.target.closest('[data-project]');
-  if (!b) return;
-  e.preventDefault();
-  openScreen(b.dataset.project);
-  b.blur();
-});
-
-/* =========================================================
-   8d · [CASE] MODAL DE CASO DE ESTUDIO
-   ========================================================= */
-const caseModal = createCaseModal({
-  onOpen: () => {
-    document.body.classList.add('case-open');
-    if (screenMode) closeFocused(true);
-    resetJoystick();
-    Object.keys(keys).forEach((k) => (keys[k] = false));
-    velocity.set(0, 0, 0);
-    toggleMenu(false);
-    toggleSettings(false);
-    dismissCard();
-  },
-  onClose: () => document.body.classList.remove('case-open'),
-});
-
-document.addEventListener('click', (e) => {
-  const b = e.target.closest('[data-case]');
-  if (!b) return;
-  e.preventDefault();
-  caseModal.open(b.dataset.case, b);
-});
-
-/* =========================================================
-   8e · [ABOUT] MODAL SOBRE MÍ
-   ========================================================= */
-const aboutModal = createAboutModal({
-  onOpen: () => {
-    document.body.classList.add('case-open');
-    if (screenMode) closeFocused(true);
-    resetJoystick();
-    Object.keys(keys).forEach((k) => (keys[k] = false));
-    velocity.set(0, 0, 0);
-    toggleMenu(false);
-    toggleSettings(false);
-    dismissCard();
-  },
-  onClose: (opts) => {
-    document.body.classList.remove('case-open');
-    if (opts?.back) { isCardDismissed = false; dismissedId = null; }
-  },
-});
-
-document.addEventListener('click', (e) => {
-  const b = e.target.closest('[data-about]');
-  if (!b) return;
-  e.preventDefault();
-  aboutModal.open(b);
-});
-
-/* =========================================================
    9 · BUCLE PRINCIPAL
    ========================================================= */
 function animate() {
@@ -1190,24 +923,22 @@ function animate() {
   const dt = Math.min(clock.getDelta(), 0.05);
   try {
     if (mixer) mixer.update(dt);
-    if (screenMode) {
-      updateScreenCamera(dt);
-    } else if (active) {
-      updateButterfly(dt);
+    if (active) {
+      if (!caseOpen) updateButterfly(dt);    // con el modal abierto la mariposa se queda quieta
       updateCamera(dt);
-      updateProximity();
+      if (!caseOpen) updateProximity();
     } else {
       tilt.position.y = Math.sin(clock.elapsedTime * 2) * 0.1;
     }
     updateTheme(dt);
-    scenery.update(dt, clock.elapsedTime, mode, fx, camera);   // [SCENERY]
+    scenery.update(dt, clock.elapsedTime, mode, fx, camera);
+    islands.update(dt, clock.elapsedTime, mode);                // [ISLANDS]
     updateFx(dt, clock.elapsedTime);
     updateLabels();
   } catch (err) {
     if (!animate.failed) { animate.failed = true; console.error('Error en el bucle:', err); }
   }
   renderer.render(scene, camera);
-  if (cssOn) css3d.render(scene, camera);
 }
 animate();
 
@@ -1215,5 +946,4 @@ addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
-  css3d.setSize(innerWidth, innerHeight);
 });

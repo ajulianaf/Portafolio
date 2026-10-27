@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 
-/* ★ [SCENERY] Ajustes rápidos */
+/* [SCENERY] Ajustes rápidos */
 const CFG = {
-  seaY: -16,          // altura del mar de nubes (bájalo si tapa la isla)
+  seaY: -16,          // altura del mar de nubes (bájalo si tapa las islas)
   ridgeFar: 105,      // radio de la cordillera lejana
   ridgeNear: 78,      // radio de la cordillera cercana
-  isletCount: 14,     // cantidad de islotes flotantes
-  isletMin: 30,       // distancia mínima al centro
-  isletMax: 75,       // distancia máxima al centro
+  isletCount: 12,     // islotes decorativos lejanos
+  isletMin: 40,       // distancia mínima al centro (las islas de proyecto quedan dentro)
+  isletMax: 85,       // distancia máxima al centro
   orbPos: new THREE.Vector3(-70, 14, -165),   // luna/sol relativo a la cámara
 };
 
@@ -20,21 +20,21 @@ const rng = (s) => () => {
 const C = (h) => new THREE.Color(h);
 const TAIL = '#include <tonemapping_fragment>\n#include <colorspace_fragment>';
 
-/* Colores de cada modo (oscuro / claro) */
+/* Colores de cada modo (oscuro = Aubergine / claro = lila suave) */
 const P = {
   dark: {
-    domeTop: C(0x140f2e), domeHor: C(0x4a2f86), domeBot: C(0x1b1240),
-    ridgeFar: C(0x3a2a78), ridgeNear: C(0x241a52),
-    sea: C(0x3a2a7a), seaGlow: C(0xff6fd8),
-    orb: C(0xf1ecff), orbGlow: C(0xb9a8ff),
-    rock: C(0x3a2f66), grass: C(0x2f9fb0),
+    domeTop: C(0x45194f), domeHor: C(0x7c3a8a), domeBot: C(0x662d72),
+    ridgeFar: C(0x5a2766), ridgeNear: C(0x45194f),
+    sea: C(0x8a4a98), seaGlow: C(0xff7ac6),
+    orb: C(0xffd9f2), orbGlow: C(0xff7ac6),
+    rock: C(0x3a1a46), grass: C(0x2fb7c9),
   },
   light: {
-    domeTop: C(0x7fa8ff), domeHor: C(0xfff0e6), domeBot: C(0xcfe0ff),
-    ridgeFar: C(0x9db7ee), ridgeNear: C(0x7f9fe0),
+    domeTop: C(0xb58ad0), domeHor: C(0xffe3f4), domeBot: C(0xe8c8ef),
+    ridgeFar: C(0xc9a3dc), ridgeNear: C(0xb185c9),
     sea: C(0xffffff), seaGlow: C(0xffd9f2),
     orb: C(0xfff2b0), orbGlow: C(0xffe08a),
-    rock: C(0x8f86b8), grass: C(0x6fdc9a),
+    rock: C(0xa57fb5), grass: C(0x6fdcc8),
   },
 };
 
@@ -49,7 +49,7 @@ function glowTexture() {
   return new THREE.CanvasTexture(c);
 }
 
-export function createScenery({ scene, colors = [0xff4fd8, 0x9d6bff, 0x00e5ff, 0xffd479] }) {
+export function createScenery({ scene, colors = [0xff7ac6, 0x00e5ff, 0xff4fd8, 0x9d6bff] }) {
   const root = new THREE.Group();
   scene.add(root);
   const follow = new THREE.Group();      // lo que sigue a la cámara (cielo, luna)
@@ -148,7 +148,7 @@ export function createScenery({ scene, colors = [0xff4fd8, 0x9d6bff, 0x00e5ff, 0
   const seaB = makeSea(CFG.seaY - 12, 0.03, 0.006);
   root.add(seaB, seaA);
 
-  /* ---------- ISLOTES FLOTANTES ---------- */
+  /* ---------- ISLOTES DECORATIVOS LEJANOS ---------- */
   const decor = new THREE.Group();
   root.add(decor);
   const rnd = rng(77);
@@ -157,7 +157,7 @@ export function createScenery({ scene, colors = [0xff4fd8, 0x9d6bff, 0x00e5ff, 0
   const islets = [];
 
   for (let i = 0; i < CFG.isletCount; i++) {
-    const g = new THREE.Group(), s = 1.8 + rnd() * 3.2, accent = new THREE.Color(colors[i % colors.length]);
+    const g = new THREE.Group(), s = 1.4 + rnd() * 2.4, accent = new THREE.Color(colors[i % colors.length]);
     const top = new THREE.Mesh(new THREE.CylinderGeometry(s, s * 0.92, 0.5, 8), grassMat);
     const rock = new THREE.Mesh(new THREE.ConeGeometry(s * 0.92, s * 1.9, 6), rockMat);
     rock.rotation.x = Math.PI;
@@ -229,7 +229,7 @@ export function createScenery({ scene, colors = [0xff4fd8, 0x9d6bff, 0x00e5ff, 0
       rockMat.color.copy(mix(D.rock, Lt.rock, mode));
       grassMat.color.copy(mix(D.grass, Lt.grass, mode));
 
-      decor.visible = fx > 0.02;                         // "Mínimo" oculta islotes (más ligero)
+      decor.visible = fx > 0.02;                         // "Mínimo" oculta los islotes decorativos
       islets.forEach((o) => {
         o.g.position.y = o.y + Math.sin(t * o.sp + o.ph) * 0.8;
         o.g.rotation.y += dt * 0.03;
