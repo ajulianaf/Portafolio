@@ -392,24 +392,112 @@ export const CASES = {
     },
   },
 
-  /* ---------- ISLA 3 · Artis (pendiente de contenido) ---------- */
+  /* ---------- ISLA 3 · Artis (contenido a partir de tu mapa de empatía, mapa de sitio, flujo y bocetos) ---------- */
   Artis: {
     ...artis,
     eyebrow: 'Caso de estudio 03 · UX/UI',
     title: 'Artis',
+
     hero: {
       ...artis.hero,
-      summary: 'Describe aquí qué es Artis, para quién es y qué resultado lograste. (Texto de ejemplo: reemplázalo.)',
+      summary: 'Diseño UX/UI de Artis, una plataforma pensada para artistas que quieren enseñar, aprender y colaborar en tiempo real en un mismo lugar, con un lienzo compartido, chat, perfiles y un entorno seguro con moderación y opciones de privacidad. Fue un trabajo en grupo en el que participé en la documentación del proceso y en el desarrollo del prototipo.',
+      meta: [
+        { k: 'Mi rol', v: 'Diseñadora UX/UI · apoyo en la documentación del proceso y el desarrollo del prototipo' },
+        { k: 'Equipo', v: 'Proyecto grupal' },
+        { k: 'Duración', v: 'X semanas' },                 // ← completa
+        { k: 'Herramientas', v: 'Figma' },                  // ← ajusta si usaste otras
+      ],
+      metrics: [],
       cover: 'assets/artis/portada.jpg',
     },
+
+    context: {
+      problem: 'Los artistas no encuentran una plataforma donde puedan enseñar y aprender al mismo tiempo. Deben combinar varias apps para lo que les gustaría hacer en una sola, las redes como Instagram o Facebook no están pensadas específicamente para ellos, y muchos sitios solo muestran el resultado final, no el paso a paso del proceso creativo.',
+      audience: 'Artistas (en especial de arte digital) que quieren mejorar sus habilidades, aprender nuevas técnicas, crecer junto a otros artistas y colaborar sin sentirse juzgados, en un ambiente seguro donde su contenido esté protegido.',
+      goals: [
+        'Negocio: posicionar Artis como una red pensada para artistas, que reúna enseñanza, colaboración y visibilidad en un solo lugar.',
+        'Usuario: compartir su obra, colaborar en tiempo real y recibir crítica honesta sin necesidad de usar apps externas.',
+        'Producto: ofrecer una interfaz clara y accesible, con moderación y opciones de privacidad que protejan el contenido de los artistas.',
+      ],
+    },
+
+    research: {
+      methods: ['Mapa de empatía'],
+      findings: [
+        'Buscan algo más que publicar una imagen: quieren ser parte de una comunidad donde mejorar, aprender técnicas nuevas y crecer como artistas.',
+        'Las plataformas actuales se quedan cortas: muchas se enfocan en un solo servicio, son principalmente promocionales o solo muestran el resultado final, no el proceso.',
+        'La colaboración en línea es valorada: los artistas conocen historias de otros que crecieron gracias a colaborar y piden recomendaciones de apps donde hacerlo en tiempo real.',
+        'La confianza es clave: sienten inseguridad de que su contenido sea plagiado o no esté protegido, y buscan ambientes con moderación y privacidad.',
+      ],
+      survey: [],
+      benchmark: null,
+    },
+
+    definition: {
+      personas: [
+        {
+          name: 'Artista en crecimiento',
+          meta: 'Usuaria tipo · Mapa de empatía',
+          quote: '¿Conoces una app donde pueda colaborar en tiempo real?',
+          goals: [
+            'Sentirse parte de una red con propósito artístico y colaboración real.',
+            'Participar en proyectos colaborativos sin necesidad de usar apps externas.',
+            'Aprender de otros artistas sin sentirse juzgada.',
+          ],
+          pains: [
+            'No encuentra una plataforma donde enseñar y aprender al mismo tiempo.',
+            'Debe usar diferentes apps para lo que le gustaría hacer en una sola.',
+            'Inseguridad de que su contenido sea plagiado o no esté protegido.',
+            'Interfaces complicadas o poco accesibles, y no obtener beneficios económicos por su arte.',
+          ],
+        },
+      ],
+      journey: [],
+      ia: [
+        { label: 'Registro de usuario / Iniciar sesión', children: [] },
+        { label: 'Inicio', children: [] },
+        { label: 'Explorar', children: [] },
+        { label: 'Perfil', children: [] },
+        { label: 'Lienzo', children: [] },
+        { label: 'Chat', children: [] },
+        { label: 'Notificaciones', children: [] },
+        { label: 'Configuración', children: [] },
+        { label: 'Soporte', children: [] },
+      ],
+    },
+
     ideation: {
       ...artis.ideation,
       gallery: [
-        { src: 'assets/artis/boceto-1.jpg', caption: 'Bocetos iniciales' },
-        { src: 'assets/artis/wireframes.png', caption: 'Wireframes de baja fidelidad' },
+        { src: 'assets/artis/mapa-de-empatia.png',   caption: 'Mapa de empatía de la usuaria tipo' },
+        { src: 'assets/artis/mapa-de-sitio.png',     caption: 'Mapa de sitio: arquitectura de información de Artis' },
+        { src: 'assets/artis/flujo-de-usuario.png',  caption: 'Flujo de usuario' },
+        { src: 'assets/artis/bocetos.png',           caption: 'Bocetos a mano de las pantallas principales' },
+      ],
+      decisions: [
+        {
+          title: 'Una sola plataforma para enseñar, aprender y colaborar',
+          text: 'Para resolver el problema de usar varias apps, la arquitectura reúne en un mismo producto nueve áreas: Registro, Inicio, Explorar, Perfil, Lienzo, Chat, Notificaciones, Configuración y Soporte.',
+        },
+        {
+          title: 'Lienzo y Chat como núcleo de la colaboración',
+          text: 'Los artistas piden colaborar en tiempo real, por eso el Lienzo y el Chat tienen sus propias secciones dentro de la navegación principal.',
+        },
+        {
+          title: 'Privacidad y soporte a la vista',
+          text: 'Ante la preocupación por el plagio y la falta de moderación, Configuración y Soporte forman parte de la estructura desde el inicio.',
+        },
+        {
+          title: 'Bocetos en papel antes de Figma',
+          text: 'Se exploraron a mano pantallas de inicio, listado de chats, perfil y un "radar" tipo mapa con captura de imagen, antes de pasar a wireframes digitales.',
+        },
       ],
     },
-    ui: { ...artis.ui, gallery: [{ src: 'assets/artis/ui-final.jpg', caption: 'Diseño final de Artis' }] },
+
+    ui: null,                                  // pendiente: aún no hay información de UI final
+    usability: null,
+    results: { metrics: [], learnings: [] },
+
     demo: {
       url: '',                      // ← pega aquí la URL del sitio o el enlace de prototipo (figmaEmbed('...'))
       external: '',                 // ← enlace para "Abrir en pestaña nueva"
